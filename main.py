@@ -19,8 +19,9 @@ def send_everyone(s):
     connection = data.create_connection('list.db')
 
     resp = data.execute_read_query(connection, data.select_all())
+    div = detect_div(s)
     for x in resp:
-        div = detect_div(s)
+        
         if div <= x[1]:
             try:
                 bot.send_message(x[0], s)
@@ -39,7 +40,7 @@ def watch_changes(interval):
         sleep(interval)
         res = util.check_changes(contests)
         
-        if (len(res) > 0):
+        if len(res) > 0:
             for t in res:
                 send_everyone(t + 'был обновлен!')
         
