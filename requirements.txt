@@ -1,4 +1,3 @@
 telebot
-configparser
-logging
+glogging
 requests
