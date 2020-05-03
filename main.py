@@ -3,9 +3,9 @@ from threading import Thread
 
 import util
 import data
+import commands
 from logs import logger
 from bot import bot
-from commands import *
 
 def detect_div(s):
     if 'Div. 3' in s:
@@ -21,7 +21,6 @@ def send_everyone(s):
     resp = data.execute_read_query(connection, data.select_all())
     div = detect_div(s)
     for x in resp:
-        
         if div <= x[1]:
             try:
                 bot.send_message(x[0], s)
