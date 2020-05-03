@@ -30,7 +30,7 @@ def update_contests():
 
         if resp2['status'] == 'OK' and resp2['result'] == []:
             try:
-                contests[id] = min(contests[id] + 1, 3)
+                contests[id] += 1
             except KeyError:
                 contests[id] = 2
 
