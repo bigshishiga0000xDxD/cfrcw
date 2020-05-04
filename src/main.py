@@ -7,30 +7,21 @@ import commands
 from logs import logger
 from bot import bot
 
-def detect_div(s):
-    if 'Div. 3' in s:
-        return 3
-    elif 'Educational' in s or 'Div. 2' in s:
-        return 2
-    else:
-        return 1
-
 def send_everyone(s):
     connection = data.create_connection('list.db')
 
     resp = data.execute_read_query(connection, data.select_all())
-    div = detect_div(s)
+    div = util.detect_div(s)
     for x in resp:
         if div <= x[1]:
             try:
                 bot.send_message(x[0], s)
             except Exception as e:
-                if 'Forbidden: bot was kicked from the group chat' in str(e):
+                e = str(e)
+                if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
                     data.execute_query(connection, data.remove_id(x[0]))
                 else:
-                    logger.error('Unknown error: {0}'.format(str(e)))
-
-
+                    logger.error('Unknown error: {0}'.format(e)
     connection.close()
 
 def watch_changes(interval):
@@ -39,9 +30,8 @@ def watch_changes(interval):
         sleep(interval)
         res = util.check_changes(contests)
         
-        if len(res) > 0:
-            for t in res:
-                send_everyone(t + 'был обновлен!')
+        for t in res:
+            send_everyone(t + 'был обновлен!')
         
         
 
