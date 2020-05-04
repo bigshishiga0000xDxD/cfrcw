@@ -3,16 +3,24 @@ import json
 
 from logs import logger
 
+def detect_div(s):
+    if 'Div. 3' in s:
+        return 3
+    elif 'Educational' in s or 'Div. 2' in s:
+        return 2
+    else:
+        return 1
+
 def update_contests():
     try:
         resp = requests.get('https://codeforces.com/api/contest.list?gym=false').json()
     except Exception as e:
         logger.critical(str(e))
-        return list()
+        return dict()
 
     if resp['status'] != 'OK':
         logger.error('looks like cf is down')
-        return list()
+        return dict()
     
     contests = dict()
     for i in range(10):
