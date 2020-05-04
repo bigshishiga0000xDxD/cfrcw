@@ -60,7 +60,7 @@ def check_changes(contests):
         if resp['status'] == 'OK' and resp['result'] != []:
             res.append(resp['result'][0]['contestName'])
         elif resp['status'] == 'FAILED':
-            logger.debug(resp['comment'])
+            logger.warning(resp['comment'])
 
         contests[id] -= 1
         if contests[id] == 0:

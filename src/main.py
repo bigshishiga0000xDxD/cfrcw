@@ -23,7 +23,6 @@ def send_everyone(s):
                 else:
                     logger.error('Unknown error: {0}'.format(e))
 
-
     connection.close()
 
 def watch_changes(interval):
