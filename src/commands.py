@@ -1,5 +1,6 @@
 from bot import bot
 import data
+import util
 
 @bot.message_handler(commands = ['start'])
 def start_message(message):
@@ -11,39 +12,68 @@ def add_id(message):
     connection = data.create_connection('list.db')
 
     if data.execute_read_query(connection, data.select_id(id)) == []:
-        data.execute_query(connection, data.insert_id(id, 3))
-    bot.send_message(id, 'Добавлено')
+        data.execute_query(connection, data.insert_id(id))
+        bot.send_message(id, 'Добавлено')
+    else:
+        bot.send_message(id, 'Чат уже добавлен')
     
     connection.close()
 
 @bot.message_handler(commands = ['remove'])
-def delete_id(message):
+def remove_id(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
     if data.execute_read_query(connection, data.select_id(id)) != []:
         data.execute_query(connection, data.remove_id(id))
-    bot.send_message(id, 'Удалено')
+        bot.send_message(id, 'Удалено')
+    else:
+        bot.send_message(id, 'Чат уже удален/еще не добавлен')
 
     connection.close()
 
-@bot.message_handler(commands = ['setlevel'])
-def set_level(message):
+@bot.message_handler(commands = ['addhandle'])
+def add_handle(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    if data.execute_read_query(connection, data.select_id(id)) != []:
-        text = message.text.split()
-        if len(text) != 2 or not text[1].isdigit() or len(text[1]) > 1 or int(text[1]) < 1 or int(text[1]) > 3:
-            bot.send_message(id, 'Неправильные аргументы. Посмотрите /help')
-        else:
-            arg = int(text[1])
-            data.execute_query(connection, data.update_level(id, arg))
-            bot.send_message(id, 'Успех')
+    text = message.text.split()
+    if len(text) != 2:
+        bot.send_message(id, 'Неправильные аргументы. Посмотрите /help')
     else:
-        bot.send_message(id, 'Необходимо сначала добавить чат. Посмотрите /help')
+        arg = text[1]
+        status = util.check_user(arg)
 
+        if status == 1:
+            if data.execute_read_query(connection, data.select_handle(id, arg)) == []:
+                data.execute_query(connection, data.insert_handle(id, arg))
+                bot.send_message(id, 'Успех')
+            else:
+                bot.send_message(id, 'Хэндл уже добавлен')
+        elif status == 0:
+            bot.send_message(id, 'Указанного хэндла не существует')
+        elif status == -1:
+            bot.send_message(id, 'Произошла ошибка codeforces')
     connection.close()
+
+
+@bot.message_handler(commands = ['removehandle'])
+def remove_handle(message):
+    id = message.chat.id
+    connection = data.create_connection('list.db')
+
+    text = message.text.split()
+    if len(text) != 2:
+        bot.send_message(id, 'Неправильные аргументы. Посмотрите /help')
+    else:
+        arg = text[1]
+
+        if data.execute_read_query(connection, data.select_handle(id, arg)) != []:
+            data.execute_query(connection, data.remove_handle(id, arg))
+            bot.send_message(id, 'Успех')
+        else:
+            bot.send_message(id, 'Хэндл еще не добавлен/уже удален')
+
 
 @bot.message_handler(commands = ['help'])
 def help(message):
@@ -51,9 +81,11 @@ def help(message):
         Комманды:\n
         /help - Вывести это сообщение\n
         /add - Разрешить сообщения об обновлении рейтинга в этом чате\n
-        /remove - Запретить сообщения об обновлении рейтинга в этом чате\n
-        /setlevel - Указать, об изменениях в каких дивизионах следует сообщать. Возможные аргументы - 1, 2, или 3
-        Например, /setlevel 2 - будет сообщаться об изменениях во втором и первом дивизионе,
-        а также в div1 + div2 и Educational раундах, но не в третьем.\n\n
+        /remove - Запретить сообщения об обновлении рейтинга в этом чате. Удаляя чат этой командой, вы так
+        же удаляете все связанные с ним хэндлы\n
+        /addhandle [handle] - Дополнительно будет присылаться изменение рейтинга пользователя c хэндлом
+        handle (если он писал контест). Обратите внимание, что если пользователь изменит хэндл, 
+        вам нужно будет добавить его снова\n
+        /removehandle [handle] - Изменение рейтинга пользователя handle присылаться не будет\n\n
         По поводу любых вопросов и предложений писать сюда @sheshenya
     """)

@@ -70,3 +70,28 @@ def check_changes(contests):
     
     logger.debug('{0} contests checked'.format(len(contests)))
     return res
+
+def check_user(handle):
+    try:
+        resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(handle)).json()
+    except Exception as e:
+        logger.critical(str(e))
+        return -1
+    
+    if resp['status'] == 'OK':
+        return 1
+    elif resp['comment'] == 'handles: User with handle {0} not found'.format(handle):
+        return 0
+    else:
+        return -1
+
+def get_contestants(id):
+    resp = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()
+    if resp['status'] == 'FAILED':
+        logger.critical(resp['comment'])
+        return None
+    else:
+        res = dict()
+        for i in range(len(resp['result'])):
+            res[resp['result'][i]['handle']] = (resp['result'][i]['oldRating'], resp['result'][i]['newRating'])
+        return (res, resp['result'][0]['contestName'])
