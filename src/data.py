@@ -62,6 +62,7 @@ if __name__ == '__main__':
     connection = create_connection('list.db')
     execute_query(connection, create_table())
 
+    data = execute_read_query(connection, select_all())
     for elem in data:
         if elem[1] != None and check_user(elem[1]) == 0:
             execute_query(connection, remove_handle(elem[0], elem[1]))
