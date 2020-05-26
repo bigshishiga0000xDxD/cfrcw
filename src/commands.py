@@ -33,49 +33,50 @@ def remove_id(message):
 
     connection.close()
 
-@Bot.message_handler(commands = ['addhandle'])
-def add_handle(message):
+@Bot.message_handler(commands = ['addhandles'])
+def add_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    text = message.text.split()
-    if len(text) != 2:
-        send_message(id, 'Неправильные аргументы. Посмотрите /help')
+    args = message.text.split()[1:]
+    if len(args) == 0:
+        send_message(id, 'Нет аргументов. Посмотрите /help')
     else:
-        arg = text[1]
-        status = util.check_user(arg)
+        for arg in args:
+            status = util.check_user(arg)
 
-        if status == 1:
-            if data.execute_read_query(connection, data.select_handle(id, arg)) == []:
+            if data.execute_read_query(connection, data.select_handle(id, arg)) == [] and status == 1:
                 data.execute_query(connection, data.insert_handle(id, arg))
-                send_message(id, 'Успех')
-            else:
-                send_message(id, 'Хэндл уже добавлен')
-        elif status == 0:
-            send_message(id, 'Указанного хэндла не существует')
-        elif status == -1:
-            send_message(id, 'Произошла ошибка codeforces')
+                send_message(id, '{0} - Успех\n'.format(arg))
+            elif data.execute_read_query(connection, data.select_handle(id, arg)) != [] and status != 1:
+                send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
+            elif status == 0:
+                send_message(id, '{0} - Указанного хэндла не существует\n'.format(arg))
+            elif status == -1:
+                send_message(id, 'Произошла ошибка codeforces. Попробуйте позже')
+                break
 
     connection.close()
 
 
-@Bot.message_handler(commands = ['removehandle'])
-def remove_handle(message):
+@Bot.message_handler(commands = ['removehandles'])
+def remove_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    text = message.text.split()
-    if len(text) != 2:
-        send_message(id, 'Неправильные аргументы. Посмотрите /help')
+    args = message.text.split()[1:]
+    if len(args) == 0:
+        send_message(id, 'Нет аргументов. Посмотрите /help')
     else:
-        arg = text[1]
+        message = str()
 
-        if data.execute_read_query(connection, data.select_handle(id, arg)) != []:
-            data.execute_query(connection, data.remove_handle(id, arg))
-            send_message(id, 'Успех')
-        else:
-            send_message(id, 'Хэндл еще не добавлен/уже удален')
-    
+        for arg in args:
+            if data.execute_read_query(connection, data.select_handle(id, arg)) != []:
+                data.execute_query(connection, data.remove_handle(id, arg))
+                send_message(id, '{0} - Успех\n'.format(arg))
+            else:
+                send_message(id, '{0} - Хэндл еще не добавлен/уже удален\n'.format(arg))
+
     connection.close()
 
 @Bot.message_handler(commands = ['listhandles'])
@@ -84,13 +85,16 @@ def list_handles(message):
     connection = data.create_connection('list.db')
 
     handles = data.execute_read_query(connection, data.select_handles(id))
-    resp = 'Хэндлы:\n'
+    if handles == []:
+        send_message(id, 'Хэндлов нет')
+    else:
+        resp = 'Хэндлы:\n'
 
-    for handle in handles:
-        resp += handle[0]
-        resp += '\n'
+        for handle in handles:
+            resp += handle[0]
+            resp += '\n'
 
-    send_message(id, resp)
+        send_message(id, resp)
 
     connection.close()
 

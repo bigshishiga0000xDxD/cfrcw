@@ -12,12 +12,14 @@ Bot = telebot.TeleBot(config.get('config', 'Token'))
 def send_message(chatId, message):
     try:
         Bot.send_message(chatId, message)
+        return True
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
             data.execute_query(connection, data.remove_id(chatId))
         else:
             logger.error('Unknown error: {0}'.format(e))
+            return False
 
 def send_everyone(contestId):
     connection = data.create_connection('list.db')

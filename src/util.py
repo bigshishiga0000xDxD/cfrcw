@@ -75,6 +75,7 @@ def check_user(handle):
     elif resp['comment'] == 'handles: User with handle {0} not found'.format(handle):
         return 0
     else:
+        logger.debug(resp['comment'])
         return -1
 
 def get_contestants(id):
