@@ -3,27 +3,19 @@ import json
 
 from logs import logger
 
-def detect_div(s):
-    if 'Div. 3' in s:
-        return 3
-    elif 'Educational' in s or 'Div. 2' in s:
-        return 2
-    else:
-        return 1
-
-def update_contests():
+def update_contests(toCheck = 10):
     try:
         resp = requests.get('https://codeforces.com/api/contest.list?gym=false').json()
     except Exception as e:
         logger.critical(str(e))
         return dict()
 
-    if resp['status'] != 'OK':
+    if resp['status'] == 'FAILED':
         logger.error('looks like cf is down')
         return dict()
     
     contests = dict()
-    for i in range(10):
+    for i in range(toCheck):
         id = resp['result'][i]['id']
         if resp['result'][i]['phase'] != 'FINISHED':
             continue
@@ -58,7 +50,7 @@ def check_changes(contests):
 
         logger.debug('for {0} status is {1}'.format(id, resp['status']))
         if resp['status'] == 'OK' and resp['result'] != []:
-            res.append(resp['result'][0]['contestName'])
+            res.append(id)
         elif resp['status'] == 'FAILED':
             logger.warning(resp['comment'])
 
