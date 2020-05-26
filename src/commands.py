@@ -55,7 +55,7 @@ def add_handle(message):
             send_message(id, 'Указанного хэндла не существует')
         elif status == -1:
             send_message(id, 'Произошла ошибка codeforces')
-            
+
     connection.close()
 
 
@@ -78,6 +78,21 @@ def remove_handle(message):
     
     connection.close()
 
+@Bot.message_handler(commands = ['listhandles'])
+def list_handles(message):
+    id = message.chat.id
+    connection = data.create_connection('list.db')
+
+    handles = data.execute_read_query(connection, data.select_handles(id))
+    resp = 'Хэндлы:\n'
+
+    for handle in handles:
+        resp += handle[0]
+        resp += '\n'
+
+    send_message(id, resp)
+
+    connection.close()
 
 @Bot.message_handler(commands = ['help'])
 def help(message):
@@ -87,6 +102,7 @@ def help(message):
 /add - Разрешить сообщения об обновлении рейтинга в этом чате\n
 /remove - Запретить сообщения об обновлении рейтинга в этом чате. Удаляя чат этой командой, вы также удаляете все связанные с ним хэндлы\n
 /addhandle [handle] - Дополнительно будет присылаться изменение рейтинга пользователя c хэндлом handle (если он писал контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова\n
-/removehandle [handle] - Изменение рейтинга пользователя handle присылаться не будет\n\n
-По поводу любых вопросов и предложений писать сюда @sheshenya
+/removehandle [handle] - Изменение рейтинга пользователя handle присылаться не будет\n
+/listahandles - Вывести список всех добавленных в этот чат хэндлов
+\nПо поводу любых вопросов и предложений писать сюда @sheshenya
     """)
