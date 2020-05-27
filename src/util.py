@@ -88,3 +88,19 @@ def get_contestants(id):
         for i in range(len(resp['result'])):
             res[resp['result'][i]['handle']] = (resp['result'][i]['oldRating'], resp['result'][i]['newRating'])
         return (res, resp['result'][0]['contestName'])
+
+def get_ratings(handles):
+    query = ''
+    for handle in handles:
+        query += handle
+        query += ';'
+
+    resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(query)).json()
+    if resp['status'] == 'FAILED':
+        logger.critical(resp['comment'])
+        return None
+    else:
+        res = dict()
+        for i in range(len(handles)):
+            res[handles[i]] = resp['result'][i]['rating']
+        return res
