@@ -44,11 +44,12 @@ def add_handles(message):
     else:
         for arg in args:
             status = util.check_user(arg)
+            isEmpty = data.execute_read_query(connection, data.select_handle(id, arg)) == []
 
-            if data.execute_read_query(connection, data.select_handle(id, arg)) == [] and status == 1:
+            if isEmpty and status == 1:
                 data.execute_query(connection, data.insert_handle(id, arg))
                 send_message(id, '{0} - Успех\n'.format(arg))
-            elif data.execute_read_query(connection, data.select_handle(id, arg)) != [] and status != 1:
+            elif not isEmpty:
                 send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
             elif status == 0:
                 send_message(id, '{0} - Указанного хэндла не существует\n'.format(arg))
