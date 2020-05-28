@@ -92,7 +92,7 @@ def get_contestants(id):
 def get_ratings(handles):
     query = ''
     for handle in handles:
-        query += handle
+        query += handle[0]
         query += ';'
 
     resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(query)).json()

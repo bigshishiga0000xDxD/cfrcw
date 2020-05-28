@@ -108,21 +108,30 @@ def get_ratings(message):
     if handles == []:
         send_message(id, 'Хэндлов нет')
     else:
-        for i in range(len(handles)):
-            handles[i] = handles[i][0]
-        ratings = util.get_ratings(handles)
-        a = list()
+        groupSize = 100
+        query = list()
+        ratings = dict()
 
-        for handle in ratings:
-            a.append(( ratings[handle], handle ))
+        for i in range(len(handles)):
+            if i % groupSize == groupSize - 1:
+                print(query)
+                for key, val in util.get_ratings(query).items():
+                    ratings[key] = val
+                
+                query = list()
+            query.append(handles[i])
         
-        a.sort(reverse = True)
+        if len(query) != 0:
+            for key, val in util.get_ratings(query).items():
+                ratings[key] = val
+
+        ratings = {key: val for key, val in sorted(ratings.items(), key = lambda item: item[1], reverse = True)}
         res = ''
 
-        for x in a:
-            res += str(x[1])
+        for item in ratings.items():
+            res += item[0][0]
             res += ': '
-            res += str(x[0])
+            res += str(item[1])
             res += '\n'
         
         send_message(id, res)
@@ -138,5 +147,6 @@ def help(message):
 /addhandle [handle] - Дополнительно будет присылаться изменение рейтинга пользователя c хэндлом handle (если он писал контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова\n
 /removehandle [handle] - Изменение рейтинга пользователя handle присылаться не будет\n
 /listahandles - Вывести список всех добавленных в этот чат хэндлов\n
+/getratings - Вывести список добавленных хэндлов, отсортированных по рейтингу\n
 \nПо поводу любых вопросов и предложений писать сюда @sheshenya
     """)
