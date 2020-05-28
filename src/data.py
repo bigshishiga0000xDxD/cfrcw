@@ -2,7 +2,52 @@ import sqlite3
 from sqlite3 import Error
 
 from logs import logger
-from util import check_user
+from cf import check_user
+
+
+class ids_handler:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def create_table():
+        return 'CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )'
+
+    @staticmethod
+    def select_all():
+        return 'SELECT * FROM ids'
+
+    @staticmethod
+    def select_id(id):
+        return 'SELECT id FROM ids WHERE id = {0}'.format(id)
+
+    @staticmethod
+    def select_all_ids():
+        return 'SELECT id FROM IDS'
+
+    @staticmethod
+    def insert_id(id):
+        return 'INSERT INTO ids VALUES ({0}, NULL)'.format(id)
+
+    @staticmethod
+    def remove_id(id):
+        return 'DELETE FROM ids WHERE id = {0}'.format(id)
+
+    @staticmethod
+    def select_handle(id, handle):
+        return 'SELECT id, handle FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
+
+    @staticmethod
+    def select_handles(id):
+        return 'SELECT handle FROM ids WHERE id = {0}'.format(id)
+
+    @staticmethod
+    def insert_handle(id, handle):
+        return 'INSERT INTO ids VALUES ({0}, "{1}")'.format(id, handle)    
+
+    @staticmethod
+    def remove_handle(id, handle):
+        return 'DELETE FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
 
 def create_connection(path):
     connection = None
@@ -12,36 +57,6 @@ def create_connection(path):
         logger.error('error {0} occurred while creating connection to database'.format(e))
 
     return connection
-
-def create_table():
-    return 'CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )'
-
-def select_all():
-    return 'SELECT * FROM ids'
-
-def select_id(id):
-    return 'SELECT id FROM ids WHERE id = {0}'.format(id)
-
-def select_all_ids():
-    return 'SELECT id FROM IDS'
-
-def insert_id(id):
-    return 'INSERT INTO ids VALUES ({0}, NULL)'.format(id)
-
-def remove_id(id):
-    return 'DELETE FROM ids WHERE id = {0}'.format(id)
-
-def select_handle(id, handle):
-    return 'SELECT id, handle FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
-
-def select_handles(id):
-    return 'SELECT handle FROM ids WHERE id = {0}'.format(id)
-
-def insert_handle(id, handle):
-    return 'INSERT INTO ids VALUES ({0}, "{1}")'.format(id, handle)    
-
-def remove_handle(id, handle):
-    return 'DELETE FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
 
 def execute_query(connection, query):
     try:
@@ -60,11 +75,11 @@ def execute_read_query(connection, query):
 
 if __name__ == '__main__':
     connection = create_connection('list.db')
-    execute_query(connection, create_table())
+    execute_query(connection, ids_handler.create_table())
 
-    data = execute_read_query(connection, select_all())
+    data = execute_read_query(connection, ids_handler.select_all())
     for elem in data:
         if elem[1] != None and check_user(elem[1]) == 0:
-            execute_query(connection, remove_handle(elem[0], elem[1]))
+            execute_query(connection, ids_handler.remove_handle(elem[0], elem[1]))
 
     connection.close()

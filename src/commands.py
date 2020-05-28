@@ -1,7 +1,8 @@
 from bot import Bot
 from bot import send_message
+from data import ids_handler
 import data
-import util
+import cf
 
 @Bot.message_handler(commands = ['start'])
 def start_message(message):
@@ -12,8 +13,8 @@ def add_id(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    if data.execute_read_query(connection, data.select_id(id)) == []:
-        data.execute_query(connection, data.insert_id(id))
+    if data.execute_read_query(connection, ids_handler.select_id(id)) == []:
+        data.execute_query(connection, ids_handler.insert_id(id))
         send_message(id, 'Добавлено')
     else:
         send_message(id, 'Чат уже добавлен')
@@ -25,8 +26,8 @@ def remove_id(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    if data.execute_read_query(connection, data.select_id(id)) != []:
-        data.execute_query(connection, data.remove_id(id))
+    if data.execute_read_query(connection, ids_handler.select_id(id)) != []:
+        data.execute_query(connection, ids_handler.remove_id(id))
         send_message(id, 'Удалено')
     else:
         send_message(id, 'Чат уже удален/еще не добавлен')
@@ -43,11 +44,11 @@ def add_handles(message):
         send_message(id, 'Нет аргументов. Посмотрите /help')
     else:
         for arg in args:
-            status = util.check_user(arg)
-            isEmpty = data.execute_read_query(connection, data.select_handle(id, arg)) == []
+            status = cf.check_user(arg)
+            isEmpty = data.execute_read_query(connection, ids_handler.select_handle(id, arg)) == []
 
             if isEmpty and status == 1:
-                data.execute_query(connection, data.insert_handle(id, arg))
+                data.execute_query(connection, ids_handler.insert_handle(id, arg))
                 send_message(id, '{0} - Успех\n'.format(arg))
             elif not isEmpty:
                 send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
@@ -72,8 +73,8 @@ def remove_handles(message):
         message = str()
 
         for arg in args:
-            if data.execute_read_query(connection, data.select_handle(id, arg)) != []:
-                data.execute_query(connection, data.remove_handle(id, arg))
+            if data.execute_read_query(connection, ids_handler.select_handle(id, arg)) != []:
+                data.execute_query(connection, ids_handler.remove_handle(id, arg))
                 send_message(id, '{0} - Успех\n'.format(arg))
             else:
                 send_message(id, '{0} - Хэндл еще не добавлен/уже удален\n'.format(arg))
@@ -85,7 +86,7 @@ def list_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    handles = data.execute_read_query(connection, data.select_handles(id))
+    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
     if handles == []:
         send_message(id, 'Хэндлов нет')
     else:
@@ -104,7 +105,7 @@ def get_ratings(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    handles = data.execute_read_query(connection, data.select_handles(id))
+    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
     if handles == []:
         send_message(id, 'Хэндлов нет')
     else:
@@ -115,14 +116,14 @@ def get_ratings(message):
         for i in range(len(handles)):
             if i % groupSize == groupSize - 1:
                 print(query)
-                for key, val in util.get_ratings(query).items():
+                for key, val in cf.get_ratings(query).items():
                     ratings[key] = val
                 
                 query = list()
             query.append(handles[i])
         
         if len(query) != 0:
-            for key, val in util.get_ratings(query).items():
+            for key, val in cf.get_ratings(query).items():
                 ratings[key] = val
 
         ratings = {key: val for key, val in sorted(ratings.items(), key = lambda item: item[1], reverse = True)}
@@ -144,8 +145,8 @@ def help(message):
 /help - Вывести это сообщение\n
 /add - Разрешить сообщения об обновлении рейтинга в этом чате\n
 /remove - Запретить сообщения об обновлении рейтинга в этом чате. Удаляя чат этой командой, вы также удаляете все связанные с ним хэндлы\n
-/addhandle [handle] - Дополнительно будет присылаться изменение рейтинга пользователя c хэндлом handle (если он писал контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова\n
-/removehandle [handle] - Изменение рейтинга пользователя handle присылаться не будет\n
+/addhandle [handle1, handle2, ...] - Дополнительно будет присылаться изменение рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом\n
+/removehandle [handle1, handle2, ...] - Изменение рейтинга указанных пользователей присылаться не будет\n
 /listahandles - Вывести список всех добавленных в этот чат хэндлов\n
 /getratings - Вывести список добавленных хэндлов, отсортированных по рейтингу\n
 \nПо поводу любых вопросов и предложений писать сюда @sheshenya

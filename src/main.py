@@ -1,17 +1,16 @@
 from time import sleep
 from threading import Thread
 
-import util
-import data
+import cf
 import commands
 from logs import logger
 from bot import Bot
 
 def watch_changes(interval = 60):
     while True:
-        contests = util.update_contests()
+        contests = cf.update_contests()
         sleep(interval)
-        res = util.check_changes(contests)
+        res = cf.check_changes(contests)
         
         for t in res:
             send_everyone(t)
