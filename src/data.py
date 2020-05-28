@@ -6,9 +6,6 @@ from cf import check_user
 
 
 class ids_handler:
-    def __init__(self):
-        pass
-
     @staticmethod
     def create_table():
         return 'CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )'

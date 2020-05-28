@@ -71,12 +71,12 @@ def check_user(handle):
         return -1
     
     if resp['status'] == 'OK':
-        return 1
+        return (1, resp['result'][0]['handle'])
     elif resp['comment'] == 'handles: User with handle {0} not found'.format(handle):
-        return 0
+        return (0, None)
     else:
         logger.debug(resp['comment'])
-        return -1
+        return (-1, None)
 
 def get_contestants(id):
     resp = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()

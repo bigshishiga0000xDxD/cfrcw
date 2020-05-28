@@ -44,7 +44,7 @@ def add_handles(message):
         send_message(id, 'Нет аргументов. Посмотрите /help')
     else:
         for arg in args:
-            status = cf.check_user(arg)
+            status, arg = cf.check_user(arg)
             isEmpty = data.execute_read_query(connection, ids_handler.select_handle(id, arg)) == []
 
             if isEmpty and status == 1:
