@@ -12,9 +12,9 @@ config.read('settings.ini')
 
 Bot = telebot.TeleBot(config.get('config', 'Token'))
 
-def send_message(chatId, message):
+def send_message(chatId, message, mode = None):
     try:
-        Bot.send_message(chatId, message)
+        Bot.send_message(chatId, message, parse_mode = mode)
         return True
     except Exception as e:
         e = str(e)
