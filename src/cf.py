@@ -2,6 +2,7 @@ import requests
 import json
 
 from logs import logger
+from auth import make_query
 
 def update_contests(toCheck = 10):
     try:
@@ -11,7 +12,7 @@ def update_contests(toCheck = 10):
         return dict()
 
     if resp['status'] == 'FAILED':
-        logger.error('looks like cf is down')
+        logger.critical('looks like cf is down')
         return dict()
     
     contests = dict()
@@ -68,21 +69,26 @@ def check_user(handle):
         resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(handle)).json()
     except Exception as e:
         logger.critical(str(e))
-        return -1
+        return (-1, None)
     
     if resp['status'] == 'OK':
         return (1, resp['result'][0]['handle'])
     elif resp['comment'] == 'handles: User with handle {0} not found'.format(handle):
         return (0, None)
     else:
-        logger.debug(resp['comment'])
+        logger.critical(resp['comment'])
         return (-1, None)
 
 def get_contestants(id):
-    resp = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()
+    try:
+        resp = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()
+    except Exception as e:
+        logger.critical(str(e))
+        return (None, None)
+
     if resp['status'] == 'FAILED':
-        logger.critical(resp['comment'])
-        return None
+        logger.critical(resp['comment'])    
+        return (None, None)
     else:
         res = dict()
         for i in range(len(resp['result'])):
@@ -95,7 +101,12 @@ def get_ratings(handles):
         query += handle[0]
         query += ';'
 
-    resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(query)).json()
+    try:
+        resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(query)).json()
+    except Exception as e:
+        logger.critical(str(e))
+        return None
+
     if resp['status'] == 'FAILED':
         logger.critical(resp['comment'])
         return None
@@ -104,3 +115,27 @@ def get_ratings(handles):
         for i in range(len(handles)):
             res[handles[i]] = resp['result'][i]['rating']
         return res
+
+def get_friends(open, secret):
+    args = make_query({'onlyOnline': 'false'}, 'user.friends', open, secret)
+    url = 'https://codeforces.com/api/user.friends?'
+
+    for i in range(len(args)):
+        url += args[i][0]
+        url += '='
+        url += args[i][1]
+        if (i != len(args) - 1):
+            url += '&'
+    
+    try:
+        resp = requests.get(url).json()
+    except Exception:
+        return (None, 'connection error')
+    
+    if resp['status'] == 'FAILED':
+        return (None, resp['comment'])
+    else:
+        result = list()
+        for handle in resp['result']:
+            result.append(handle)
+        return (result, None)

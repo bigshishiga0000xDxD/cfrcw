@@ -1,6 +1,8 @@
+from logs import logger
 from bot import Bot
 from bot import send_message
 from data import ids_handler
+from data import keys_handler
 import data
 import cf
 
@@ -34,6 +36,22 @@ def remove_id(message):
 
     connection.close()
 
+def _add_handles(id, args, connection):
+    for arg in args:
+        status, arg = cf.check_user(arg)
+        isEmpty = data.execute_read_query(connection, ids_handler.select_handle(id, arg)) == []
+
+        if isEmpty and status == 1:
+            data.execute_query(connection, ids_handler.insert_handle(id, arg))
+            send_message(id, '{0} - Успех\n'.format(arg))
+        elif not isEmpty:
+            send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
+        elif status == 0:
+            send_message(id, '{0} - Указанного хэндла не существует\n'.format(arg))
+        elif status == -1:
+            send_message(id, 'Произошла ошибка codeforces. Попробуйте позже')
+            break
+
 @Bot.message_handler(commands = ['addhandles'])
 def add_handles(message):
     id = message.chat.id
@@ -43,20 +61,7 @@ def add_handles(message):
     if len(args) == 0:
         send_message(id, 'Нет аргументов. Посмотрите /help')
     else:
-        for arg in args:
-            status, arg = cf.check_user(arg)
-            isEmpty = data.execute_read_query(connection, ids_handler.select_handle(id, arg)) == []
-
-            if isEmpty and status == 1:
-                data.execute_query(connection, ids_handler.insert_handle(id, arg))
-                send_message(id, '{0} - Успех\n'.format(arg))
-            elif not isEmpty:
-                send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
-            elif status == 0:
-                send_message(id, '{0} - Указанного хэндла не существует\n'.format(arg))
-            elif status == -1:
-                send_message(id, 'Произошла ошибка codeforces. Попробуйте позже')
-                break
+        _add_handles(id, args, connection)
 
     connection.close()
 
@@ -115,8 +120,13 @@ def get_ratings(message):
 
         for i in range(len(handles)):
             if i % groupSize == groupSize - 1:
-                print(query)
-                for key, val in cf.get_ratings(query).items():
+                
+                _ratings = cf.get_ratings(query)
+                if _ratings == None:
+                    send_message(id, 'Произошла ошибка codeforces')
+                    return                
+
+                for key, val in _ratings.items():
                     ratings[key] = val
                 
                 query = list()
@@ -136,7 +146,53 @@ def get_ratings(message):
             res += '\n'
         
         send_message(id, res)
+
+@Bot.message_handler(commands = ['sync'])
+def sync(message):
+    id = message.chat.id
+    if (message.chat.type == 'group'):
+        send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
+    else:
+        connection = data.create_connection('list.db')
+
+        elems = data.execute_read_query(connection, keys_handler.select_keys(id))
+        if elems == []:
+            send_message(id, 'Вы не добавили api ключи. Посмотрите /help')
+        else:
+            open, secret = elems[0]
+            handles, status = cf.get_friends(open, secret)
+            
+            if handles == None:
+                if 'Incorrect API key' in status:
+                    send_message(id, 'Вы указали неправильные ключи')
+                else:
+                    send_message(id, 'Что-то пошло не так. Скорее всего, codeforces сейчас недоступен.')
+                    logger.critical(status)
+            else:
+                _add_handles(id, handles, connection)
         
+        connection.close()
+        
+        
+
+@Bot.message_handler(commands = ['addkeys'])
+def add_keys(message):
+    id = message.chat.id
+    if (message.chat.type == 'group'):
+        send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
+    else:
+        connection = data.create_connection('list.db')
+        args = message.text.split()[1:]
+
+        if len(args) != 2:
+            send_message(id, 'Неверные аргументы. Посмотрите /help')
+        else:
+            if data.execute_read_query(connection, keys_handler.select_keys(id)) != []:
+                data.execute_query(connection, keys_handler.remove_keys(id))
+            
+            data.execute_query(connection, keys_handler.insert_keys(id, args[0], args[1]))
+            send_message(id, 'Успех')
+        connection.close()
 
 @Bot.message_handler(commands = ['help'])
 def help(message):
@@ -145,9 +201,11 @@ def help(message):
 /help - Вывести это сообщение\n
 /add - Разрешить сообщения об обновлении рейтинга в этом чате\n
 /remove - Запретить сообщения об обновлении рейтинга в этом чате. Удаляя чат этой командой, вы также удаляете все связанные с ним хэндлы\n
-/addhandle [handle1, handle2, ...] - Дополнительно будет присылаться изменение рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом\n
-/removehandle [handle1, handle2, ...] - Изменение рейтинга указанных пользователей присылаться не будет\n
+/addhandles [handle1, handle2, ...] - Дополнительно будет присылаться изменение рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом\n
+/removehandles [handle1, handle2, ...] - Изменение рейтинга указанных пользователей присылаться не будет\n
 /listahandles - Вывести список всех добавленных в этот чат хэндлов\n
 /getratings - Вывести список добавленных хэндлов, отсортированных по рейтингу\n
+/sync - Сихронизировать список ваших друзей с текущим списком. Чтобы выполнить эту команду необходимо сначала выполнить /addkeys. /sync не удаляет ваш текущий список хэндлов. Если вам необходимо полностью синхронизировать списки, выполните сначала /remove\n
+/addkeys - Добавить api ключи. Вы можете создать их здесь https://codeforces.com/settings/api. Для этого нажмите кнопку "Добавить ключ API" и в качестве названия напишите, например, ```cfrcw```, а в поле пароль - свой пароль от аккаунта codeforces. В аргументах команды необходимо сначала ввести ключ ```key```, а затем ключ ```secret```. Поскольку второй ключ является секретным, эта команда отключена в групповых чатах.
 \nПо поводу любых вопросов и предложений писать сюда @sheshenya
     """)

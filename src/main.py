@@ -5,6 +5,7 @@ import cf
 import commands
 from logs import logger
 from bot import Bot
+from bot import send_everyone
 
 def watch_changes(interval = 60):
     while True:

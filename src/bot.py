@@ -3,6 +3,7 @@ from configparser import ConfigParser
 
 from logs import logger
 from data import ids_handler
+import data
 import cf
 
 
@@ -18,7 +19,8 @@ def send_message(chatId, message):
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
-            data.execute_query(connection, ids_handler.remove_id(chatId))
+            with data.create_connection('list.db') as connection:
+                data.execute_query(connection, ids_handler.remove_id(chatId))
         else:
             logger.error('Unknown error: {0}'.format(e))
             return False
