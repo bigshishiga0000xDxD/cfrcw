@@ -36,21 +36,48 @@ def remove_id(message):
 
     connection.close()
 
-def _add_handles(id, args, connection):
-    for arg in args:
-        status, arg = cf.check_user(arg)
-        isEmpty = data.execute_read_query(connection, ids_handler.select_handle(id, arg)) == []
+def __add_handles(id, args, connection):
+    for handle in args:
+        if data.execute_read_query(connection, ids_handler.select_handle(id, handle)) == []:
+            data.execute_query(connection, ids_handler.insert_handle(id, handle))
 
-        if isEmpty and status == 1:
-            data.execute_query(connection, ids_handler.insert_handle(id, arg))
-            send_message(id, '{0} - Успех\n'.format(arg))
-        elif not isEmpty:
-            send_message(id, '{0} - Хэндл уже добавлен\n'.format(arg))
-        elif status == 0:
-            send_message(id, '{0} - Указанного хэндла не существует\n'.format(arg))
+def _add_handles(id, args, connection):
+    args = list(map(lambda x : x.lower(), args))
+    args = list(set(args))
+    
+    def exec_query(query):
+        status, resp = cf.check_users(query)
+        if status == 0:
+            send_message(id, 'Пользователь с хэндлом {0} не найден'.format(resp))
+            return None
         elif status == -1:
-            send_message(id, 'Произошла ошибка codeforces. Попробуйте позже')
-            break
+            send_message(id, 'Произошла ошибка codeforces')
+            return None
+        return resp
+
+    groupSize = 100
+    query = list()
+    handles = list()
+
+    for i in range(len(args)):
+        query.append(args[i])
+        if i % groupSize == groupSize - 1:
+            res = exec_query(query)
+            if res == None:
+                return
+            else:
+                handles += res
+            query = list()
+    
+    res = exec_query(query)
+    if res == None:
+        return
+    else:
+        handles += res
+    
+    __add_handles(id, handles, connection)
+    
+    send_message(id, 'Все хэндлы успешно добавлены')
 
 @Bot.message_handler(commands = ['addhandles'])
 def add_handles(message):
@@ -120,7 +147,6 @@ def get_ratings(message):
 
         for i in range(len(handles)):
             if i % groupSize == groupSize - 1:
-                
                 _ratings = cf.get_ratings(query)
                 if _ratings == None:
                     send_message(id, 'Произошла ошибка codeforces')
@@ -171,7 +197,8 @@ def sync(message):
                     send_message(id, 'Что-то пошло не так. Скорее всего, codeforces сейчас недоступен.')
                     logger.critical(status)
             else:
-                _add_handles(id, handles, connection)
+                __add_handles(id, handles, connection)
+                send_message(id, 'Успех')
         
         connection.close()
         

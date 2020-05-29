@@ -2,7 +2,7 @@ import sqlite3
 from sqlite3 import Error
 
 from logs import logger
-from cf import check_user
+from cf import check_users
 
 
 class ids_handler:

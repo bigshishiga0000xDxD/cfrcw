@@ -64,17 +64,26 @@ def check_changes(contests):
     logger.debug('{0} contests checked'.format(len(contests)))
     return res
 
-def check_user(handle):
+def check_users(handles):
+    url = 'https://codeforces.com/api/user.info?handles='
+    for handle in handles:
+        url += handle
+        url += ';'
+    
     try:
-        resp = requests.get('https://codeforces.com/api/user.info?handles={0}'.format(handle)).json()
+        resp = requests.get(url).json()
     except Exception as e:
         logger.critical(str(e))
         return (-1, None)
     
     if resp['status'] == 'OK':
-        return (1, resp['result'][0]['handle'])
-    elif resp['comment'] == 'handles: User with handle {0} not found'.format(handle):
-        return (0, None)
+        handles = list()
+        for x in resp['result']:
+            handles.append(x['handle'])
+        return (1, handles)
+    elif resp['comment'].startswith('handles: User with handle') and resp['comment'].endswith('not found'):
+        s = resp['comment']
+        return (0, s[s.find('handle ') + 7 : s.find('not') - 1])
     else:
         logger.critical(resp['comment'])
         return (-1, None)
