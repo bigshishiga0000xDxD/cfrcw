@@ -37,7 +37,7 @@ def send_everyone(contestId):
             send_message(id, 'Произошла ошибка codeforces')
         else:
             handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-            message = '{0} был обновлен!\n'.format(name)
+            message = '{0} был обновлен!\n\n'.format(name)
 
             for y in handles:
                 handle = y[0]
