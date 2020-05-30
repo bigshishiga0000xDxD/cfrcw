@@ -110,13 +110,16 @@ def get_ratings(message):
         ratings = {key: val for key, val in sorted(ratings.items(), key = lambda item: item[1], reverse = True)}
         res = ''
 
+        maxLenNickname = max(map(len, map(lambda x: x[0], ratings.keys())))
+
         for item in ratings.items():
             res += item[0][0]
             res += ': '
+            res += ' ' * (maxLenNickname - len(item[0][0]))
+            print((maxLenNickname - len(item[0][0])))
             res += str(item[1])
             res += '\n'
-        
-        send_message(id, res)
+        send_message(id, "`" + res + "`", mode = 'markdown')
     
     connection.close()
 
