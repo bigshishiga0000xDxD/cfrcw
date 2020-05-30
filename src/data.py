@@ -45,6 +45,18 @@ class ids_handler:
     @staticmethod
     def remove_handle(id, handle):
         return 'DELETE FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
+    
+    @staticmethod
+    def select_cf_handles(id):
+        return """
+            SELECT
+                handles.cf_handle
+            FROM
+                ids
+            INNER JOIN handles ON ids.handle = handles.handle
+            WHERE
+                ids.id = {0}
+            """.format(id)
 
 
 class keys_handler:
@@ -72,6 +84,46 @@ class keys_handler:
     def drop_table():
         return 'DROP TABLE keys'
     
+
+class queue_handler:
+    @staticmethod
+    def create_table():
+        return 'CREATE TABLE IF NOT EXISTS add_queue ( id INTEGER, type INTEGER )'
+    
+    @staticmethod
+    def select_type(id):
+        return 'SELECT type FROM add_queue WHERE id = {0}'.format(id)
+    
+    @staticmethod
+    def insert_id(id, type):
+        return 'INSERT INTO add_queue VALUES ({0}, {1})'.format(id, type)
+    
+    @staticmethod
+    def remove_id(id):
+        return 'DELETE FROM add_queue WHERE id = {0}'.format(id)
+    
+    @staticmethod
+    def select_all():
+        return 'SELECT * FROM add_queue'
+    
+
+
+class handles_handler:
+    @staticmethod
+    def create_table():
+        return 'CREATE TABLE IF NOT EXISTS handles ( handle TEXT, cf_handle TEXT )'
+    
+    @staticmethod
+    def select_all():
+        return 'SELECT * FROM handles'
+    
+    @staticmethod
+    def select_cf_handle(handle):
+        return 'SELECT cf_handle FROM handles WHERE handle = "{0}"'.format(handle)
+    
+    @staticmethod
+    def insert_handles(handle, cf_handle):
+        return 'INSERT INTO handles VALUES ("{0}", "{1}")'.format(handle, cf_handle)
 
 def create_connection(path):
     connection = None
@@ -101,7 +153,9 @@ if __name__ == '__main__':
     connection = create_connection('list.db')
     execute_query(connection, ids_handler.create_table())
     execute_query(connection, keys_handler.create_table())
-    
+    execute_query(connection, queue_handler.create_table())
+    execute_query(connection, handles_handler.create_table())
+
     #data = execute_read_query(connection, ids_handler.select_all())
     #for elem in data:
     #    if elem[1] != None and check_user(elem[1]) == 0:

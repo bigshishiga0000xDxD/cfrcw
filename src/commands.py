@@ -3,27 +3,18 @@ from bot import Bot
 from bot import send_message
 from data import ids_handler
 from data import keys_handler
+from data import queue_handler
+import util
 import data
 import cf
 
+
 @Bot.message_handler(commands = ['start'])
 def start_message(message):
-    send_message(message.chat.id, 'Напишите /help чтобы увидеть список команд')
-
-@Bot.message_handler(commands = ['add'])
-def add_id(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    send_message(id, 'Напишите /help чтобы увидеть список команд')
 
-    if data.execute_read_query(connection, ids_handler.select_id(id)) == []:
-        data.execute_query(connection, ids_handler.insert_id(id))
-        send_message(id, 'Добавлено')
-    else:
-        send_message(id, 'Чат уже добавлен')
-    
-    connection.close()
-
-@Bot.message_handler(commands = ['remove'])
+@Bot.message_handler(commands = ['clear'])
 def remove_id(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
@@ -36,89 +27,43 @@ def remove_id(message):
 
     connection.close()
 
-def __add_handles(id, args, connection):
-    for handle in args:
-        if data.execute_read_query(connection, ids_handler.select_handle(id, handle)) == []:
-            data.execute_query(connection, ids_handler.insert_handle(id, handle))
-
-def _add_handles(id, args, connection):
-    args = list(map(lambda x : x.lower(), args))
-    args = list(set(args))
-    
-    def exec_query(query):
-        status, resp = cf.check_users(query)
-        if status == 0:
-            send_message(id, 'Пользователь с хэндлом {0} не найден'.format(resp))
-            return None
-        elif status == -1:
-            send_message(id, 'Произошла ошибка codeforces')
-            return None
-        return resp
-
-    groupSize = 100
-    query = list()
-    handles = list()
-
-    for i in range(len(args)):
-        query.append(args[i])
-        if i % groupSize == groupSize - 1:
-            res = exec_query(query)
-            if res == None:
-                return
-            else:
-                handles += res
-            query = list()
-    
-    res = exec_query(query)
-    if res == None:
-        return
-    else:
-        handles += res
-    
-    __add_handles(id, handles, connection)
-    
-    send_message(id, 'Все хэндлы успешно добавлены')
-
-@Bot.message_handler(commands = ['addhandles'])
+@Bot.message_handler(commands = ['add'])
 def add_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
     args = message.text.split()[1:]
     if len(args) == 0:
-        send_message(id, 'Нет аргументов. Посмотрите /help')
+        data.execute_query(connection, queue_handler.remove_id(id))
+        data.execute_query(connection, queue_handler.insert_id(id, 0))
+        send_message(id, 'Введите хэндлы или напишите /cancel для отмены')
     else:
-        _add_handles(id, args, connection)
+        util._add_handles(id, args, connection)
 
     connection.close()
 
 
-@Bot.message_handler(commands = ['removehandles'])
+@Bot.message_handler(commands = ['remove'])
 def remove_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
     args = message.text.split()[1:]
     if len(args) == 0:
-        send_message(id, 'Нет аргументов. Посмотрите /help')
+        data.execute_query(connection, queue_handler.remove_id(id))
+        data.execute_query(connection, queue_handler.insert_id(id, 1))
+        send_message(id, 'Введите хэндлы или напишите /cancel для отмены')
     else:
-        message = str()
-
-        for arg in args:
-            if data.execute_read_query(connection, ids_handler.select_handle(id, arg)) != []:
-                data.execute_query(connection, ids_handler.remove_handle(id, arg))
-                send_message(id, '{0} - Успех\n'.format(arg))
-            else:
-                send_message(id, '{0} - Хэндл еще не добавлен/уже удален\n'.format(arg))
+        util._remove_handles(id, args, connection)
 
     connection.close()
 
-@Bot.message_handler(commands = ['listhandles'])
+@Bot.message_handler(commands = ['list'])
 def list_handles(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
+    handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
         send_message(id, 'Хэндлов нет')
     else:
@@ -132,12 +77,12 @@ def list_handles(message):
 
     connection.close()
 
-@Bot.message_handler(commands = ['getratings'])
+@Bot.message_handler(commands = ['ratings'])
 def get_ratings(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
+    handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
         send_message(id, 'Хэндлов нет')
     else:
@@ -197,7 +142,7 @@ def sync(message):
                     send_message(id, 'Что-то пошло не так. Скорее всего, codeforces сейчас недоступен.')
                     logger.critical(status)
             else:
-                __add_handles(id, handles, connection)
+                util.__add_handles(id, list(map(lambda x : x.lower(), handles)), handles, connection)
                 send_message(id, 'Успех')
         
         connection.close()
@@ -213,28 +158,64 @@ def add_keys(message):
         connection = data.create_connection('list.db')
         args = message.text.split()[1:]
 
-        if len(args) != 2:
-            send_message(id, 'Неверные аргументы. Посмотрите /help')
+        if len(args) == 2:
+            util._add_keys(id, args, connection)
+        elif len(args) == 0:
+            send_message(id, 'Введите ключи или напишите /cancel для отмены')
+            data.execute_query(connection, queue_handler.insert_id(id, 2))
         else:
-            if data.execute_read_query(connection, keys_handler.select_keys(id)) != []:
-                data.execute_query(connection, keys_handler.remove_keys(id))
-            
-            data.execute_query(connection, keys_handler.insert_keys(id, args[0], args[1]))
-            send_message(id, 'Успех')
+            send_message(id, 'Неверные аргументы. Посмотрите /help')
+        
         connection.close()
+
+
+@Bot.message_handler(commands = ['cancel'])
+def cancel(message):
+    id = message.chat.id
+    connection = data.create_connection('list.db')
+
+    resp = data.execute_read_query(connection, queue_handler.select_type(id))
+    if resp == []:
+        send_message(id, 'Нечего отменять')
+    else:
+        data.execute_query(connection, queue_handler.remove_id(id))
+        send_message(id, 'Отменено')
+    
+    connection.close()
+
+@Bot.message_handler(content_types = ['text'])
+def text_handler(message):
+    id = message.chat.id
+    connection = data.create_connection('list.db')
+    
+    resp = data.execute_read_query(connection, queue_handler.select_type(id))
+    if resp == []:
+        return
+
+    data.execute_query(connection, queue_handler.remove_id(id))
+    args = message.text.split()
+    if resp[0][0] == 0:
+        util._add_handles(id, args, connection)
+    elif resp[0][0] == 1:
+        util._remove_handles(id, args, connection)
+    else:
+        util._add_keys(id, args, connection)
+    
+    
+    connection.close()
+
 
 @Bot.message_handler(commands = ['help'])
 def help(message):
     send_message(message.chat.id, """
     Комманды:\n
-/help - Вывести это сообщение\n
-/add - Разрешить сообщения об обновлении рейтинга в этом чате\n
-/remove - Запретить сообщения об обновлении рейтинга в этом чате. Удаляя чат этой командой, вы также удаляете все связанные с ним хэндлы\n
-/addhandles [handle1, handle2, ...] - Дополнительно будет присылаться изменение рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом\n
-/removehandles [handle1, handle2, ...] - Изменение рейтинга указанных пользователей присылаться не будет\n
-/listahandles - Вывести список всех добавленных в этот чат хэндлов\n
-/getratings - Вывести список добавленных хэндлов, отсортированных по рейтингу\n
-/sync - Сихронизировать список ваших друзей с текущим списком. Чтобы выполнить эту команду необходимо сначала выполнить /addkeys. /sync не удаляет ваш текущий список хэндлов. Если вам необходимо полностью синхронизировать списки, выполните сначала /remove\n
-/addkeys - Добавить api ключи. Вы можете создать их здесь https://codeforces.com/settings/api. Для этого нажмите кнопку "Добавить ключ API" и в качестве названия напишите, например, `cfrcw`, а в поле пароль - свой пароль от аккаунта codeforces. В аргументах команды необходимо сначала ввести ключ `key`, а затем ключ `secret`. Поскольку второй ключ является секретным, эта команда отключена в групповых чатах.
+/help - Вывести это сообщение.\n
+/add [handle1 handle2 ...] - Будут присылаться изменения рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
+/remove [handle1 handle2 ...] - Изменения рейтинга указанных пользователей присылаться не будет. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
+/clear - Удалить все хэндлы и запретить сообщения.\n
+/list - Вывести список всех добавленных в этот чат хэндлов.\n
+/ratings - Вывести список добавленных хэндлов, отсортированных по рейтингу.\n
+/sync - Сихронизировать список ваших друзей с текущим списком. Чтобы выполнить эту команду необходимо сначала выполнить /addkeys. /sync не удаляет ваш текущий список хэндлов. Если вам необходимо полностью синхронизировать списки, выполните сначала /remove.\n
+/addkeys ['key' 'secret'] - Добавить api ключи. Вы можете создать их здесь https://codeforces.com/settings/api. Для этого нажмите кнопку "Добавить ключ API" и в качестве названия напишите, например, `cfrcw`, а в поле пароль - свой пароль от аккаунта codeforces. Поскольку второй ключ является секретным, эта команда отключена в групповых чатах. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
 \nПо поводу любых вопросов и предложений писать сюда @sheshenya
     """, mode = 'markdown')
