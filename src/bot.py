@@ -1,16 +1,12 @@
 import telebot
-from configparser import ConfigParser
+from os import environ
 
 from logs import logger
 from data import ids_handler
 import data
 import cf
 
-
-config = ConfigParser()
-config.read('settings.ini')
-
-Bot = telebot.TeleBot(config.get('config', 'Token'))
+Bot = telebot.TeleBot(environ['TOKEN'])
 
 def send_message(chatId, message, mode = None):
     try:
