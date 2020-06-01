@@ -1,0 +1,9 @@
+[Unit]
+Description=cfrcw telegram bot
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/cfrcw.conf
+User=danil
+ExecStartPre=python3 /home/danil/dev/cfrcw/src/data.py
+ExecStart=python3 /home/danil/dev/cfrcw/src/main.py

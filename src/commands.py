@@ -1,6 +1,7 @@
 from logs import logger
 from bot import Bot
 from bot import send_message
+from env import path
 from data import ids_handler
 from data import keys_handler
 from data import queue_handler
@@ -17,7 +18,7 @@ def start_message(message):
 @Bot.message_handler(commands = ['clear'])
 def remove_id(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     data.execute_query(connection, ids_handler.remove_id(id))
     send_message(id, 'Удалено')
@@ -27,7 +28,7 @@ def remove_id(message):
 @Bot.message_handler(commands = ['add'])
 def add_handles(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     args = message.text.split()[1:]
     if len(args) == 0:
@@ -43,7 +44,7 @@ def add_handles(message):
 @Bot.message_handler(commands = ['remove'])
 def remove_handles(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     args = message.text.split()[1:]
     if len(args) == 0:
@@ -58,7 +59,7 @@ def remove_handles(message):
 @Bot.message_handler(commands = ['list'])
 def list_handles(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
@@ -77,7 +78,7 @@ def list_handles(message):
 @Bot.message_handler(commands = ['ratings'])
 def get_ratings(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
@@ -125,7 +126,7 @@ def sync(message):
     if (message.chat.type == 'group'):
         send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
     else:
-        connection = data.create_connection('list.db')
+        connection = data.create_connection(path + 'list.db')
 
         elems = data.execute_read_query(connection, keys_handler.select_keys(id))
         if elems == []:
@@ -154,7 +155,7 @@ def add_keys(message):
     if (message.chat.type == 'group'):
         send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
     else:
-        connection = data.create_connection('list.db')
+        connection = data.create_connection(path + 'list.db')
         args = message.text.split()[1:]
 
         if len(args) == 2:
@@ -171,7 +172,7 @@ def add_keys(message):
 @Bot.message_handler(commands = ['cancel'])
 def cancel(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:
@@ -188,20 +189,20 @@ def help(message):
     send_message(message.chat.id, """
     Комманды:\n
 /help - Вывести это сообщение.\n
-/add [handle1 handle2 ...] - Будут присылаться изменения рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
-/remove [handle1 handle2 ...] - Изменения рейтинга указанных пользователей присылаться не будет. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
+/add `handle1` `handle2` ... - Будут присылаться изменения рейтинга пользователей c указанными хэндлами (если они писали контест). Обратите внимание, что если пользователь изменит хэндл, вам нужно будет добавить его снова под новым хэндлом. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
+/remove `handle1` `handle2` ... - Изменения рейтинга указанных пользователей присылаться не будет. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
 /clear - Удалить все хэндлы и запретить сообщения.\n
 /list - Вывести список всех добавленных в этот чат хэндлов.\n
 /ratings - Вывести список добавленных хэндлов, отсортированных по рейтингу.\n
-/sync - Сихронизировать список ваших друзей с текущим списком. Чтобы выполнить эту команду необходимо сначала выполнить /addkeys. /sync не удаляет ваш текущий список хэндлов. Если вам необходимо полностью синхронизировать списки, выполните сначала /remove.\n
-/addkeys ['key' 'secret'] - Добавить api ключи. Вы можете создать их здесь https://codeforces.com/settings/api. Для этого нажмите кнопку "Добавить ключ API" и в качестве названия напишите, например, `cfrcw`, а в поле пароль - свой пароль от аккаунта codeforces. Поскольку второй ключ является секретным, эта команда отключена в групповых чатах. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
+/sync - Сихронизировать список ваших друзей с текущим списком. Чтобы выполнить эту команду необходимо сначала выполнить /addkeys. /sync не удаляет ваш текущий список хэндлов. Если вам необходимо полностью синхронизировать списки, выполните сначала /clear.\n
+/addkeys `key` `secret` - Добавить api ключи. Вы можете создать их здесь https://codeforces.com/settings/api. Для этого нажмите кнопку "Добавить ключ API" и в качестве названия напишите, например, `cfrcw`, а в поле пароль - свой пароль от аккаунта codeforces. Поскольку второй ключ является секретным, эта команда отключена в групповых чатах. Можно запустить без параметров и ввести хэндлы следующим сообщением.\n
 \nПо поводу любых вопросов и предложений писать сюда @sheshenya
     """, mode = 'markdown')
 
 @Bot.message_handler(content_types = ['text'])
 def text_handler(message):
     id = message.chat.id
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
     
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:

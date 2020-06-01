@@ -1,12 +1,12 @@
 import telebot
-from os import environ
+from env import token, path
 
 from logs import logger
 from data import ids_handler
 import data
 import cf
 
-Bot = telebot.TeleBot(environ['TOKEN'])
+Bot = telebot.TeleBot(token)
 
 def send_message(chatId, message, mode = None):
     try:
@@ -15,14 +15,14 @@ def send_message(chatId, message, mode = None):
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
-            with data.create_connection('list.db') as connection:
+            with data.create_connection(path + 'list.db') as connection:
                 data.execute_query(connection, ids_handler.remove_id(chatId))
         else:
             logger.error('Unknown error: {0}'.format(e))
             return False
 
 def send_everyone(contestId):
-    connection = data.create_connection('list.db')
+    connection = data.create_connection(path + 'list.db')
 
     resp = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
     contestants, name = cf.get_contestants(contestId)
