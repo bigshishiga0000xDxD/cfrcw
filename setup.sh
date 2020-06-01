@@ -1,5 +1,5 @@
 #!/bin/bash
 
-rm -rf src settings.ini setup.sh
+rm -rf src
 tar -xf deploy.tar
 rm deploy.tar

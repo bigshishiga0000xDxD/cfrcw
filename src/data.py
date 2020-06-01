@@ -151,14 +151,10 @@ def execute_read_query(connection, query):
 
 if __name__ == '__main__':
     connection = create_connection('list.db')
+
     execute_query(connection, ids_handler.create_table())
     execute_query(connection, keys_handler.create_table())
     execute_query(connection, queue_handler.create_table())
     execute_query(connection, handles_handler.create_table())
-
-    #data = execute_read_query(connection, ids_handler.select_all())
-    #for elem in data:
-    #    if elem[1] != None and check_user(elem[1]) == 0:
-    #        execute_query(connection, ids_handler.remove_handle(elem[0], elem[1]))
 
     connection.close()

@@ -19,11 +19,8 @@ def remove_id(message):
     id = message.chat.id
     connection = data.create_connection('list.db')
 
-    if data.execute_read_query(connection, ids_handler.select_id(id)) != []:
-        data.execute_query(connection, ids_handler.remove_id(id))
-        send_message(id, 'Удалено')
-    else:
-        send_message(id, 'Чат уже удален/еще не добавлен')
+    data.execute_query(connection, ids_handler.remove_id(id))
+    send_message(id, 'Удалено')
 
     connection.close()
 
@@ -116,7 +113,6 @@ def get_ratings(message):
             res += item[0][0]
             res += ': '
             res += ' ' * (maxLenNickname - len(item[0][0]))
-            print((maxLenNickname - len(item[0][0])))
             res += str(item[1])
             res += '\n'
         send_message(id, "`" + res + "`", mode = 'markdown')

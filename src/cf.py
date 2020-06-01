@@ -4,7 +4,7 @@ import json
 from logs import logger
 from auth import make_query
 
-def update_contests(toCheck = 10):
+def update_contests(toCheck = 10, contests = dict()):
     try:
         resp = requests.get('https://codeforces.com/api/contest.list?gym=false').json()
     except Exception as e:
@@ -14,8 +14,7 @@ def update_contests(toCheck = 10):
     if resp['status'] == 'FAILED':
         logger.critical('looks like cf is down')
         return dict()
-    
-    contests = dict()
+
     for i in range(toCheck):
         id = resp['result'][i]['id']
         if resp['result'][i]['phase'] != 'FINISHED':

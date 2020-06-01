@@ -34,6 +34,9 @@ def send_everyone(contestId):
         else:
             handles = data.execute_read_query(connection, ids_handler.select_handles(id))
             message = '{0} был обновлен!\n\n'.format(name)
+            message += '`'
+
+            maxLenNickname = max(map(len, map(lambda x: x[0], handles)))
 
             for y in handles:
                 handle = y[0]
@@ -47,8 +50,11 @@ def send_everyone(contestId):
                 else:
                     delta = '+' + str(delta)
                 
-                message += '{0}: {1} -> {2} ({3})\n'.format(handle, oldRating, newRating, delta)
+                message += handle
+                message += ': '
+                message += ' ' * (maxLenNickname - len(handle))
+                message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
             
-            send_message(id, message)
+            send_message(id, message + '`', mode = 'markdown')
 
     connection.close()

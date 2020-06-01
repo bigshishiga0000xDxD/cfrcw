@@ -8,8 +8,9 @@ from bot import Bot
 from bot import send_everyone
 
 def watch_changes(interval = 60):
+    contests = dict()
     while True:
-        contests = cf.update_contests()
+        cf.update_contests(contests = contests)
         sleep(interval)
         res = cf.check_changes(contests)
         
