@@ -1,51 +1,47 @@
-import sqlite3
-from sqlite3 import Error
+import psycopg2
 
 from logs import logger
 from cf import check_users
 from env import path
+from env import password
 
 
 class ids_handler:
     @staticmethod
     def create_table():
-        return 'CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )'
+        return "CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )"
 
     @staticmethod
     def select_all():
-        return 'SELECT * FROM ids'
+        return "SELECT * FROM ids"
 
     @staticmethod
     def select_id(id):
-        return 'SELECT id FROM ids WHERE id = {0}'.format(id)
+        return "SELECT id FROM ids WHERE id = {0}".format(id)
 
     @staticmethod
     def select_all_ids():
-        return 'SELECT id FROM IDS'
-
-    @staticmethod
-    def insert_id(id):
-        return 'INSERT INTO ids VALUES ({0}, NULL)'.format(id)
+        return "SELECT id FROM IDS"
 
     @staticmethod
     def remove_id(id):
-        return 'DELETE FROM ids WHERE id = {0}'.format(id)
+        return "DELETE FROM ids WHERE id = {0}".format(id)
 
     @staticmethod
     def select_handle(id, handle):
-        return 'SELECT id, handle FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
+        return "SELECT id, handle FROM ids WHERE id = {0} AND handle = '{1}'".format(id, handle)
 
     @staticmethod
     def select_handles(id):
-        return 'SELECT handle FROM ids WHERE id = {0}'.format(id)
+        return "SELECT handle FROM ids WHERE id = {0}".format(id)
 
     @staticmethod
     def insert_handle(id, handle):
-        return 'INSERT INTO ids VALUES ({0}, "{1}")'.format(id, handle)    
+        return "INSERT INTO ids VALUES ({0}, '{1}')".format(id, handle)    
 
     @staticmethod
     def remove_handle(id, handle):
-        return 'DELETE FROM ids WHERE id = {0} AND handle = "{1}"'.format(id, handle)
+        return "DELETE FROM ids WHERE id = {0} AND handle = '{1}'".format(id, handle)
     
     @staticmethod
     def select_cf_handles(id):
@@ -63,75 +59,81 @@ class ids_handler:
 class keys_handler:
     @staticmethod
     def create_table():
-        return 'CREATE TABLE IF NOT EXISTS keys ( id INTEGER, open TEXT, secret TEXT )'
+        return "CREATE TABLE IF NOT EXISTS keys ( id INTEGER, open TEXT, secret TEXT )"
     
     @staticmethod
     def select_all():
-        return 'SELECT * FROM keys'
+        return "SELECT * FROM keys"
 
     @staticmethod
     def insert_keys(id, open, secret):
-        return 'INSERT INTO keys VALUES ({0}, "{1}", "{2}")'.format(id, open, secret)
+        return "INSERT INTO keys VALUES ({0}, '{1}', '{2}')".format(id, open, secret)
 
     @staticmethod
     def select_keys(id):
-        return 'SELECT open, secret FROM keys WHERE id = {0}'.format(id)
+        return "SELECT open, secret FROM keys WHERE id = {0}".format(id)
     
     @staticmethod
     def remove_keys(id):
-        return 'DELETE FROM keys WHERE id = {0}'.format(id)
+        return "DELETE FROM keys WHERE id = {0}".format(id)
     
     @staticmethod
     def drop_table():
-        return 'DROP TABLE keys'
+        return "DROP TABLE keys"
     
 
 class queue_handler:
     @staticmethod
     def create_table():
-        return 'CREATE TABLE IF NOT EXISTS add_queue ( id INTEGER, type INTEGER )'
+        return "CREATE TABLE IF NOT EXISTS add_queue ( id INTEGER, type INTEGER )"
     
     @staticmethod
     def select_type(id):
-        return 'SELECT type FROM add_queue WHERE id = {0}'.format(id)
+        return "SELECT type FROM add_queue WHERE id = {0}".format(id)
     
     @staticmethod
     def insert_id(id, type):
-        return 'INSERT INTO add_queue VALUES ({0}, {1})'.format(id, type)
+        return "INSERT INTO add_queue VALUES ({0}, {1})".format(id, type)
     
     @staticmethod
     def remove_id(id):
-        return 'DELETE FROM add_queue WHERE id = {0}'.format(id)
+        return "DELETE FROM add_queue WHERE id = {0}".format(id)
     
     @staticmethod
     def select_all():
-        return 'SELECT * FROM add_queue'
+        return "SELECT * FROM add_queue"
     
 
 
 class handles_handler:
     @staticmethod
     def create_table():
-        return 'CREATE TABLE IF NOT EXISTS handles ( handle TEXT, cf_handle TEXT )'
+        return "CREATE TABLE IF NOT EXISTS handles ( handle TEXT, cf_handle TEXT )"
     
     @staticmethod
     def select_all():
-        return 'SELECT * FROM handles'
+        return "SELECT * FROM handles"
     
     @staticmethod
     def select_cf_handle(handle):
-        return 'SELECT cf_handle FROM handles WHERE handle = "{0}"'.format(handle)
+        return "SELECT cf_handle FROM handles WHERE handle = '{0}'".format(handle)
     
     @staticmethod
     def insert_handles(handle, cf_handle):
-        return 'INSERT INTO handles VALUES ("{0}", "{1}")'.format(handle, cf_handle)
+        return "INSERT INTO handles VALUES ('{0}', '{1}')".format(handle, cf_handle)
 
-def create_connection(path):
-    connection = None
+def create_connection(name):
     try:
-        connection = sqlite3.connect(path)
-    except Error as e:
-        logger.error('error {0} occurred while creating connection to database'.format(e))
+        connection = psycopg2.connect(
+            database = name,
+            user = 'postgres',
+            password =  password,
+            host = '127.0.0.1',
+            port = '5432'
+        )
+        return connection
+    except Exception as e:
+        logger.error('error {0} occurred while creating connection to database'.format(str(e)))
 
     return connection
 
@@ -139,23 +141,24 @@ def execute_query(connection, query):
     try:
         connection.cursor().execute(query)
         connection.commit()
-    except Error as e:
-        logger.error('error {0} occurred while processing query; query = {1}'.format(e, query))
+    except Exception as e:
+        logger.error('error {0} occurred while processing query; query = {1}'.format(str(e), query))
 
 def execute_read_query(connection, query):
     try:
         cursor = connection.cursor()
         cursor.execute(query)
         return cursor.fetchall()
-    except Error as e:
-        logger.error('error {0} occurred while reading; query = {1}'.format(e, query))
+    except Exception as e:
+        logger.error('error {0} occurred while reading; query = {1}'.format(str(e), query))
 
 if __name__ == '__main__':
-    connection = create_connection(path + 'list.db')
+    connection = create_connection('cfrcw')
 
     execute_query(connection, ids_handler.create_table())
     execute_query(connection, keys_handler.create_table())
     execute_query(connection, queue_handler.create_table())
     execute_query(connection, handles_handler.create_table())
+
 
     connection.close()

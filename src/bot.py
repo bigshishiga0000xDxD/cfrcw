@@ -15,14 +15,14 @@ def send_message(chatId, message, mode = None):
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
-            with data.create_connection(path + 'list.db') as connection:
+            with data.create_connection('cfrcw') as connection:
                 data.execute_query(connection, ids_handler.remove_id(chatId))
         else:
             logger.error('Unknown error: {0}'.format(e))
             return False
 
 def send_everyone(contestId):
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     resp = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
     contestants, name = cf.get_contestants(contestId)
@@ -40,7 +40,7 @@ def send_everyone(contestId):
 
             for y in handles:
                 handle = y[0]
-                if handle == None or contestants.get(handle) == None:
+                if contestants.get(handle) == None:
                     continue
                 oldRating = contestants[handle][0]
                 newRating = contestants[handle][1]

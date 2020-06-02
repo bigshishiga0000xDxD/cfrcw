@@ -18,7 +18,7 @@ def start_message(message):
 @Bot.message_handler(commands = ['clear'])
 def remove_id(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     data.execute_query(connection, ids_handler.remove_id(id))
     send_message(id, 'Удалено')
@@ -28,7 +28,7 @@ def remove_id(message):
 @Bot.message_handler(commands = ['add'])
 def add_handles(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     args = message.text.split()[1:]
     if len(args) == 0:
@@ -44,7 +44,7 @@ def add_handles(message):
 @Bot.message_handler(commands = ['remove'])
 def remove_handles(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     args = message.text.split()[1:]
     if len(args) == 0:
@@ -59,7 +59,7 @@ def remove_handles(message):
 @Bot.message_handler(commands = ['list'])
 def list_handles(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
@@ -78,7 +78,7 @@ def list_handles(message):
 @Bot.message_handler(commands = ['ratings'])
 def get_ratings(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
@@ -126,7 +126,7 @@ def sync(message):
     if (message.chat.type == 'group'):
         send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
     else:
-        connection = data.create_connection(path + 'list.db')
+        connection = data.create_connection('cfrcw')
 
         elems = data.execute_read_query(connection, keys_handler.select_keys(id))
         if elems == []:
@@ -155,7 +155,7 @@ def add_keys(message):
     if (message.chat.type == 'group'):
         send_message(id, 'Эта команда не может быть выполнена в групповых чатах в целях безопасности ваших данных')
     else:
-        connection = data.create_connection(path + 'list.db')
+        connection = data.create_connection('cfrcw')
         args = message.text.split()[1:]
 
         if len(args) == 2:
@@ -172,7 +172,7 @@ def add_keys(message):
 @Bot.message_handler(commands = ['cancel'])
 def cancel(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
 
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:
@@ -202,7 +202,7 @@ def help(message):
 @Bot.message_handler(content_types = ['text'])
 def text_handler(message):
     id = message.chat.id
-    connection = data.create_connection(path + 'list.db')
+    connection = data.create_connection('cfrcw')
     
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:
