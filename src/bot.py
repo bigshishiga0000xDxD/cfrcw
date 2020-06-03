@@ -1,5 +1,5 @@
 import telebot
-from env import token, path
+from env import token
 
 from logs import logger
 from data import ids_handler

@@ -1,7 +1,6 @@
 from logs import logger
 from bot import Bot
 from bot import send_message
-from env import path
 from data import ids_handler
 from data import keys_handler
 from data import queue_handler

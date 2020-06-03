@@ -2,7 +2,6 @@ import psycopg2
 
 from logs import logger
 from cf import check_users
-from env import path
 from env import password
 
 
@@ -134,8 +133,6 @@ def create_connection(name):
         return connection
     except Exception as e:
         logger.error('error {0} occurred while creating connection to database'.format(str(e)))
-
-    return connection
 
 def execute_query(connection, query):
     try:

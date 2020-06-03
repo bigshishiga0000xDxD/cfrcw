@@ -37,7 +37,6 @@ def update_contests(toCheck = 10, contests = dict()):
             logger.debug('{0} id has been appended'.format(id))
 
     logger.debug('updating is done')
-    return contests
 
 def check_changes(contests):
     res = list()

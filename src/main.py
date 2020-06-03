@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from time import sleep
 from threading import Thread
 
@@ -20,7 +22,7 @@ def watch_changes(interval = 60):
 # main
 
 try:
-    thread1 = Thread(target = Bot.polling)
+    thread1 = Thread(target = Bot.infinity_polling)
     thread2 = Thread(target = watch_changes)
     thread1.daemon = True
     thread2.daemon = True
