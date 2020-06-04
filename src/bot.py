@@ -1,22 +1,24 @@
 import telebot
-from env import token
 
+from env import token
 from logs import logger
 from data import ids_handler
+from util import _clear
 import data
 import cf
 
+
 Bot = telebot.TeleBot(token)
 
-def send_message(chatId, message, mode = None):
+def send_message(chatId, message, mode = None, markup = None):
     try:
-        Bot.send_message(chatId, message, parse_mode = mode)
+        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup)
         return True
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
             with data.create_connection('cfrcw') as connection:
-                data.execute_query(connection, ids_handler.remove_id(chatId))
+                _clear(id, connection)
         else:
             logger.error('Unknown error: {0}'.format(e))
             return False

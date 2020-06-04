@@ -124,15 +124,7 @@ def get_ratings(handles):
         return res
 
 def get_friends(open, secret):
-    args = make_query({'onlyOnline': 'false'}, 'user.friends', open, secret)
-    url = 'https://codeforces.com/api/user.friends?'
-
-    for i in range(len(args)):
-        url += args[i][0]
-        url += '='
-        url += args[i][1]
-        if (i != len(args) - 1):
-            url += '&'
+    url = make_query({'onlyOnline': 'false'}, 'user.friends', open, secret)
     
     try:
         resp = requests.get(url).json()

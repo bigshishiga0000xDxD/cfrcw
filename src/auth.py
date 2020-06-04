@@ -32,4 +32,13 @@ def make_query(args, methodName, open, secret):
     hash = sha512(apiSig.encode('utf-8'))
     args.append(('apiSig', rand + hash.hexdigest()))
 
-    return args
+    url = 'https://codeforces.com/api/{0}?'.format(methodName)
+
+    for i in range(len(args)):
+        url += args[i][0]
+        url += '='
+        url += args[i][1]
+        if (i != len(args) - 1):
+            url += '&'
+    
+    return url
