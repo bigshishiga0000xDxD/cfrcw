@@ -23,6 +23,21 @@ def send_message(chatId, message, mode = None, markup = None):
             logger.error('Unknown error: {0}'.format(e))
             return False
 
+def edit_message(chatId, messageId, message):
+    try:
+        Bot.edit_message_text(message, chatId, message_id = messageId)
+        return True
+    except Exception as e:
+        e = str(e)
+        if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
+            with data.create_connection('cfrcw') as connection:
+                _clear(id, connection)
+        elif not 'Bad Request: message is not modified' in e:
+            logger.error('Unknown error: {0}'.format(e))
+            return False
+
+
+
 def send_everyone(contestId):
     connection = data.create_connection('cfrcw')
 

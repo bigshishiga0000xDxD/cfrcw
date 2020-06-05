@@ -1,6 +1,7 @@
 from logs import logger
 from bot import Bot
 from bot import send_message
+from bot import edit_message
 from data import ids_handler
 from data import keys_handler
 from data import queue_handler
@@ -29,7 +30,7 @@ def add_handles(message):
     if len(args) == 0:
         data.execute_query(connection, queue_handler.remove_id(id))
         data.execute_query(connection, queue_handler.insert_id(id, 0))
-        send_message(id, 'Введите хэндлы или напишите /cancel для отмены', markup = util.create_keyboard())
+        send_message(id, 'Введите хэндлы', markup = util.create_keyboard())
     else:
         send_message(id, util._add_handles(id, args, connection))
 
@@ -45,7 +46,7 @@ def remove_handles(message):
     if len(args) == 0:
         data.execute_query(connection, queue_handler.remove_id(id))
         data.execute_query(connection, queue_handler.insert_id(id, 1))
-        send_message(id, 'Введите хэндлы или напишите /cancel для отмены', markup = util.create_keyboard())
+        send_message(id, 'Введите хэндлы', markup = util.create_keyboard())
     else:
         send_message(id, util._remove_handles(id, args, connection))
 
@@ -104,22 +105,12 @@ def add_keys(message):
         if len(args) == 2:
             send_message(id, util._add_keys(id, args, connection))
         elif len(args) == 0:
-            send_message(id, 'Введите ключи или напишите /cancel для отмены', markup = util.create_keyboard())
+            send_message(id, 'Введите ключи', markup = util.create_keyboard())
             data.execute_query(connection, queue_handler.insert_id(id, 2))
         else:
             send_message(id, 'Неверные аргументы. Посмотрите /help')
         
         connection.close()
-
-
-@Bot.message_handler(commands = ['cancel'])
-def cancel(message):
-    id = message.chat.id
-    connection = data.create_connection('cfrcw')
-
-    send_message(id, util._cancel(id, connection))
-    
-    connection.close()
 
 
 @Bot.message_handler(commands = ['help'])
@@ -139,11 +130,12 @@ def help(message):
 
 @Bot.callback_query_handler(func = lambda call: True)
 def cancel_button_handler(call):
-    id = call.message.chat.id
+    chatId = call.message.chat.id
+    messageId = call.message.message_id
     try:
         if call.message and call.data == 'cancel':
             with data.create_connection('cfrcw') as connection:
-                send_message(id, util._cancel(id, connection))
+                edit_message(chatId, messageId, util._cancel(chatId, connection))    
             
     except Exception as e:
         logger.error(str(e))

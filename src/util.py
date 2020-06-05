@@ -55,12 +55,8 @@ def _add_keys(id, args, connection):
     return 'Ключи добавлены'
 
 def _cancel(id, connection):
-    resp = data.execute_read_query(connection, queue_handler.select_type(id))
-    if resp == []:
-        return 'Нечего отменять'
-    else:
-        data.execute_query(connection, queue_handler.remove_id(id))
-        return 'Отменено'
+    data.execute_query(connection, queue_handler.remove_id(id))
+    return 'Отменено'
 
 def _clear(id, connection):
     data.execute_query(connection, ids_handler.remove_id(id))
@@ -70,7 +66,7 @@ def _clear(id, connection):
     
 
 def create_keyboard():
-    button = types.InlineKeyboardButton('/cancel', callback_data = 'cancel')
+    button = types.InlineKeyboardButton('Отменить', callback_data = 'cancel')
     table = types.InlineKeyboardMarkup()
     table.add(button)
     return table
