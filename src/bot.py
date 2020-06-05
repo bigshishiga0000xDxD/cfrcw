@@ -18,7 +18,7 @@ def send_message(chatId, message, mode = None, markup = None):
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
             with data.create_connection('cfrcw') as connection:
-                _clear(id, connection)
+                _clear(chatId, connection)
         else:
             logger.error('Unknown error: {0}'.format(e))
             return False
@@ -31,7 +31,7 @@ def edit_message(chatId, messageId, message):
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
             with data.create_connection('cfrcw') as connection:
-                _clear(id, connection)
+                _clear(chatId, connection)
         elif not 'Bad Request: message is not modified' in e:
             logger.error('Unknown error: {0}'.format(e))
             return False
