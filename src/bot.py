@@ -1,6 +1,7 @@
 import telebot
 
 from env import token
+from env import dbname
 from logs import logger
 from data import ids_handler
 from util import _clear
@@ -17,7 +18,7 @@ def send_message(chatId, message, mode = None, markup = None):
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
-            with data.create_connection('cfrcw') as connection:
+            with data.create_connection(dbname) as connection:
                 _clear(chatId, connection)
         else:
             logger.error('Unknown error: {0}'.format(e))
@@ -30,7 +31,7 @@ def edit_message(chatId, messageId, message):
     except Exception as e:
         e = str(e)
         if 'Forbidden: bot was kicked from the group chat' in e or 'Forbidden: bot was blocked by the user' in e:
-            with data.create_connection('cfrcw') as connection:
+            with data.create_connection(dbname) as connection:
                 _clear(chatId, connection)
         elif not 'Bad Request: message is not modified' in e:
             logger.error('Unknown error: {0}'.format(e))
@@ -39,7 +40,7 @@ def edit_message(chatId, messageId, message):
 
 
 def send_everyone(contestId):
-    connection = data.create_connection('cfrcw')
+    connection = data.create_connection(dbname)
 
     resp = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
     contestants, name = cf.get_contestants(contestId)
@@ -53,7 +54,12 @@ def send_everyone(contestId):
             message = '{0} был обновлен!\n\n'.format(name)
             message += '`'
 
-            maxLenNickname = max(map(len, map(lambda x: x[0], handles)))
+            maxLenNickname = 0
+            for y in handles:
+                handle = y[0]
+                if contestants.get(handle) == None:
+                    continue
+                maxLenNickname = max(maxLenNickname, len(handle))
 
             for y in handles:
                 handle = y[0]

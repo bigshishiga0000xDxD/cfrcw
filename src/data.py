@@ -3,6 +3,7 @@ import psycopg2
 from logs import logger
 from cf import check_users
 from env import password
+from env import dbname
 
 
 class ids_handler:
@@ -150,7 +151,7 @@ def execute_read_query(connection, query):
         logger.error('error {0} occurred while reading; query = {1}'.format(str(e), query))
 
 if __name__ == '__main__':
-    connection = create_connection('cfrcw')
+    connection = create_connection(dbname)
 
     execute_query(connection, ids_handler.create_table())
     execute_query(connection, keys_handler.create_table())
