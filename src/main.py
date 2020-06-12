@@ -3,21 +3,24 @@
 from time import sleep
 from threading import Thread
 
-import cf
-import commands
 from logs import logger
 from bot import Bot
 from bot import send_everyone
+from var import interval
+import cf
+import commands
 
-def watch_changes(interval = 60):
+def watch_changes():
     contests = dict()
     while True:
-        cf.update_contests(contests = contests)
+        contests, skipped = cf.update_contests(contests)
+        for id in skipped:
+            send_everyone(id)
         sleep(interval)
-        res = cf.check_changes(contests)
+        res, contests = cf.check_changes(contests)
         
-        for t in res:
-            send_everyone(t)
+        for id in res:
+            send_everyone(id)
 
 # main
 

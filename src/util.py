@@ -4,6 +4,7 @@ from data import ids_handler
 from data import handles_handler
 from data import keys_handler
 from data import queue_handler
+from var import groupSize
 from cf import check_users
 from cf import get_ratings
 import data
@@ -28,7 +29,7 @@ def __add_handles(id, handles, handles_cf, connection):
             data.execute_query(connection, handles_handler.insert_handles(handle, cf_handle))
     return 'Все хэндлы успешно добавлены'
 
-def _add_handles(id, args, connection, groupSize = 100):
+def _add_handles(id, args, connection):
     args = list(map(lambda x : x.lower(), args))
     args = list(set(args))
 
@@ -84,7 +85,7 @@ def _list(id, connection):
 
         return resp
 
-def _get_ratings(id, connection, groupSize = 100):
+def _get_ratings(id, connection):
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
     if handles == []:
         return 'Хэндлов нет'

@@ -2,7 +2,7 @@ from logs import logger
 from bot import Bot
 from bot import send_message
 from bot import edit_message
-from env import dbname
+from var import dbname
 from data import ids_handler
 from data import keys_handler
 from data import queue_handler

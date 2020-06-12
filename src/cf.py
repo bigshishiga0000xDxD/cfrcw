@@ -3,8 +3,12 @@ import json
 
 from logs import logger
 from auth import make_query
+from var import toCheck
+from var import dbname
+from data import contests_handler
+import data
 
-def update_contests(toCheck = 10, contests = dict()):
+def update_contests(contests):
     try:
         resp = requests.get('https://codeforces.com/api/contest.list?gym=false').json()
     except Exception as e:
@@ -12,8 +16,11 @@ def update_contests(toCheck = 10, contests = dict()):
         return dict()
 
     if resp['status'] == 'FAILED':
-        logger.critical('looks like cf is down')
+        logger.critical(resp['comment'])
         return dict()
+
+    skipped = list()
+    connection = data.create_connection(dbname)
 
     for i in range(toCheck):
         id = resp['result'][i]['id']
@@ -28,18 +35,25 @@ def update_contests(toCheck = 10, contests = dict()):
         
         logger.debug('i = {0}; id = {1};'.format(i, id))
 
-        if resp2['status'] == 'OK' and resp2['result'] == []:
+        if (resp2['status'] == 'OK' and resp2['result'] == []):
             try:
-                contests[id] += 1
+                contests[id] = min(contests[id] + 1, 2)
             except KeyError:
                 contests[id] = 2
 
             logger.debug('{0} id has been appended'.format(id))
+        elif data.execute_read_query(connection, contests_handler.select_id(id)) == [] and resp2['status'] == 'OK':
+            skipped.append(id)
+            data.execute_query(connection, contests_handler.insert_id(id))
 
+    connection.close()
     logger.debug('updating is done')
+    return (contests, skipped)
 
 def check_changes(contests):
     res = list()
+    contests2 = contests
+
     for id in contests.keys():
         try:
             resp = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()
@@ -50,17 +64,18 @@ def check_changes(contests):
         logger.debug('for {0} status is {1}'.format(id, resp['status']))
         if resp['status'] == 'OK' and resp['result'] != []:
             res.append(id)
+            with data.create_connection(dbname) as connection:
+                data.execute_query(connection, contests_handler.insert_id(id))
         elif resp['status'] == 'FAILED':
             logger.warning(resp['comment'])
 
         contests[id] -= 1
         if contests[id] == 0:
-            contests.pop(id)
+            contests2.pop(id)
             logger.debug('{0} is no longer in the list'.format(id))
-        
     
     logger.debug('{0} contests checked'.format(len(contests)))
-    return res
+    return (res, contests2)
 
 def check_users(handles):
     url = 'https://codeforces.com/api/user.info?handles='

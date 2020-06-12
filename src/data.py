@@ -1,12 +1,14 @@
 import psycopg2
 
 from logs import logger
-from cf import check_users
-from env import password
-from env import dbname
+from var import password
+from var import dbname
 
 
 class ids_handler:
+    """
+    id, handle
+    """
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS ids ( id INTEGER NOT NULL, handle TEXT )"
@@ -16,12 +18,8 @@ class ids_handler:
         return "SELECT * FROM ids"
 
     @staticmethod
-    def select_id(id):
-        return "SELECT id FROM ids WHERE id = {0}".format(id)
-
-    @staticmethod
     def select_all_ids():
-        return "SELECT id FROM IDS"
+        return "SELECT id FROM ids"
 
     @staticmethod
     def remove_id(id):
@@ -29,7 +27,7 @@ class ids_handler:
 
     @staticmethod
     def select_handle(id, handle):
-        return "SELECT id, handle FROM ids WHERE id = {0} AND handle = '{1}'".format(id, handle)
+        return "SELECT (0) FROM ids WHERE id = {0} AND handle = '{1}'".format(id, handle)
 
     @staticmethod
     def select_handles(id):
@@ -57,6 +55,9 @@ class ids_handler:
 
 
 class keys_handler:
+    """
+    id, open, secret
+    """
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS keys ( id INTEGER, open TEXT, secret TEXT )"
@@ -83,29 +84,35 @@ class keys_handler:
     
 
 class queue_handler:
+    """
+    id, type
+    """
     @staticmethod
     def create_table():
-        return "CREATE TABLE IF NOT EXISTS add_queue ( id INTEGER, type INTEGER )"
+        return "CREATE TABLE IF NOT EXISTS queue ( id INTEGER, type INTEGER )"
     
     @staticmethod
     def select_type(id):
-        return "SELECT type FROM add_queue WHERE id = {0}".format(id)
+        return "SELECT type FROM queue WHERE id = {0}".format(id)
     
     @staticmethod
     def insert_id(id, type):
-        return "INSERT INTO add_queue VALUES ({0}, {1})".format(id, type)
+        return "INSERT INTO queue VALUES ({0}, {1})".format(id, type)
     
     @staticmethod
     def remove_id(id):
-        return "DELETE FROM add_queue WHERE id = {0}".format(id)
+        return "DELETE FROM queue WHERE id = {0}".format(id)
     
     @staticmethod
     def select_all():
-        return "SELECT * FROM add_queue"
+        return "SELECT * FROM queue"
     
 
 
 class handles_handler:
+    """
+    handle, cf_handle
+    """
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS handles ( handle TEXT, cf_handle TEXT )"
@@ -121,6 +128,23 @@ class handles_handler:
     @staticmethod
     def insert_handles(handle, cf_handle):
         return "INSERT INTO handles VALUES ('{0}', '{1}')".format(handle, cf_handle)
+
+
+class contests_handler:
+    """
+    id
+    """
+    @staticmethod
+    def create_table():
+        return "CREATE TABLE IF NOT EXISTS contests ( id INTEGER )"
+    
+    @staticmethod
+    def select_id(id):
+        return "SELECT (0) FROM contests WHERE id = {0}".format(id)
+    
+    @staticmethod
+    def insert_id(id):
+        return "INSERT INTO contests VALUES ({0})".format(id)
 
 def create_connection(name):
     try:
@@ -157,6 +181,6 @@ if __name__ == '__main__':
     execute_query(connection, keys_handler.create_table())
     execute_query(connection, queue_handler.create_table())
     execute_query(connection, handles_handler.create_table())
-
+    execute_query(connection, contests_handler.create_table())
 
     connection.close()

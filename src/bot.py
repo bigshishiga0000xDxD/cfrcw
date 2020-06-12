@@ -1,7 +1,9 @@
 import telebot
+from time import sleep
 
-from env import token
-from env import dbname
+from var import token
+from var import dbname
+from var import interval
 from logs import logger
 from data import ids_handler
 from util import _clear
@@ -42,42 +44,47 @@ def edit_message(chatId, messageId, message):
 def send_everyone(contestId):
     connection = data.create_connection(dbname)
 
-    resp = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
-    contestants, name = cf.get_contestants(contestId)
-    
-    for x in resp:
-        id = x[0]
+    ids = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
+
+    while True:
+        contestants, name = cf.get_contestants(contestId)
         if contestants == None:
-            send_message(id, 'Произошла ошибка codeforces')
+            sleep(interval)
         else:
-            handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-            message = '{0} был обновлен!\n\n'.format(name)
-            message += '`'
+            break
+    
+    for x in ids:
+        id = x[0]
+        handles = data.execute_read_query(connection, ids_handler.select_handles(id))
+        if handles == []:
+            continue
+        message = '{0} был обновлен!\n\n'.format(name)
+        message += '`'
 
-            maxLenNickname = 0
-            for y in handles:
-                handle = y[0]
-                if contestants.get(handle) == None:
-                    continue
-                maxLenNickname = max(maxLenNickname, len(handle))
+        maxLenNickname = 0
+        for y in handles:
+            handle = y[0]
+            if contestants.get(handle) == None:
+                continue
+            maxLenNickname = max(maxLenNickname, len(handle))
 
-            for y in handles:
-                handle = y[0]
-                if contestants.get(handle) == None:
-                    continue
-                oldRating = contestants[handle][0]
-                newRating = contestants[handle][1]
-                delta = newRating - oldRating
-                if delta < 0:
-                    delta = '-' + str(delta)
-                else:
-                    delta = '+' + str(delta)
-                
-                message += handle
-                message += ': '
-                message += ' ' * (maxLenNickname - len(handle))
-                message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
+        for y in handles:
+            handle = y[0]
+            if contestants.get(handle) == None:
+                continue
+            oldRating = contestants[handle][0]
+            newRating = contestants[handle][1]
+            delta = newRating - oldRating
+            if delta < 0:
+                delta = '-' + str(delta)
+            else:
+                delta = '+' + str(delta)
             
-            send_message(id, message + '`', mode = 'markdown')
+            message += handle
+            message += ': '
+            message += ' ' * (maxLenNickname - len(handle))
+            message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
+        
+        send_message(id, message + '`', mode = 'markdown')
 
     connection.close()
