@@ -52,6 +52,10 @@ class ids_handler:
             WHERE
                 ids.id = {0}
             """.format(id)
+    
+    @staticmethod
+    def select_all_handles(handle):
+        return "SELECT 1 FROM ids WHERE handle = '{0}' LIMIT 1".format(handle)
 
 
 class keys_handler:
@@ -128,6 +132,10 @@ class handles_handler:
     @staticmethod
     def insert_handles(handle, cf_handle):
         return "INSERT INTO handles VALUES ('{0}', '{1}')".format(handle, cf_handle)
+    
+    @staticmethod
+    def remove_handle(handle):
+        return "DELETE FROM handles WHERE handle = '{0}'".format(handle)
 
 
 class contests_handler:

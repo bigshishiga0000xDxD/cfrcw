@@ -14,6 +14,8 @@ def _remove_handles(id, args, connection):
 
     for arg in args:
         data.execute_query(connection, ids_handler.remove_handle(id, arg))
+        if data.execute_read_query(connection, ids_handler.select_all_handles(arg)) == []:
+            data.execute_query(connection, handles_handler.remove_handle(arg))
     
     return 'Все хэндлы успешно удалены'
 
@@ -60,7 +62,9 @@ def _cancel(id, connection):
     return 'Отменено'
 
 def _clear(id, connection):
-    data.execute_query(connection, ids_handler.remove_id(id))
+    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
+    handles = map(lambda x : x[0], handles)
+    _remove_handles(id, handles, connection)
     data.execute_query(connection, keys_handler.remove_keys(id))
     data.execute_query(connection, queue_handler.remove_id(id))
     return 'Все данные успешно удалены'

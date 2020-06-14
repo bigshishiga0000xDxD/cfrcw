@@ -11,16 +11,12 @@ import cf
 import commands
 
 def watch_changes():
-    contests = dict()
     while True:
-        contests, skipped = cf.update_contests(contests)
-        for id in skipped:
+        contests = cf.check_changes()
+        for id in contests:
             send_everyone(id)
         sleep(interval)
-        res, contests = cf.check_changes(contests)
         
-        for id in res:
-            send_everyone(id)
 
 # main
 
