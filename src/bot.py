@@ -44,7 +44,7 @@ def edit_message(chatId, messageId, message):
 def send_everyone(contestId):
     connection = data.create_connection(dbname)
 
-    ids = set(data.execute_read_query(connection, ids_handler.select_all_ids()))
+    ids = data.execute_read_query(connection, ids_handler.select_all_ids())
 
     while True:
         contestants, name = cf.get_contestants(contestId)
@@ -56,8 +56,6 @@ def send_everyone(contestId):
     for x in ids:
         id = x[0]
         handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-        if handles == []:
-            continue
         message = '{0} был обновлен!\n\n'.format(name)
         message += '`'
 
@@ -67,6 +65,9 @@ def send_everyone(contestId):
             if contestants.get(handle) == None:
                 continue
             maxLenNickname = max(maxLenNickname, len(handle))
+
+        if maxLenNickname == 0:
+            continue
 
         for y in handles:
             handle = y[0]

@@ -19,7 +19,7 @@ class ids_handler:
 
     @staticmethod
     def select_all_ids():
-        return "SELECT id FROM ids"
+        return "SELECT DISTINCT id FROM ids"
 
     @staticmethod
     def remove_id(id):
