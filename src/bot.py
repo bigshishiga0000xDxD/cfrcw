@@ -13,9 +13,9 @@ import cf
 
 Bot = telebot.TeleBot(token)
 
-def send_message(chatId, message, mode = None, markup = None, web_page_preview = None):
+def send_message(chatId, message, mode = None, markup = None, web_page_preview = True):
     try:
-        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup, disable_web_page_preview = web_page_preview)
+        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
         return True
     except Exception as e:
         e = str(e)
@@ -56,8 +56,6 @@ def send_everyone(contestId):
     for x in ids:
         id = x[0]
         handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-        message = '[{0}](https://codeforces.com/contest/{1}) был обновлен!\n\n'.format(name, contestId)
-        message += '`'
 
         maxLenNickname = 0
         for y in handles:
@@ -68,6 +66,8 @@ def send_everyone(contestId):
 
         if maxLenNickname == 0:
             continue
+
+        results = list()
 
         for y in handles:
             handle = y[0]
@@ -81,11 +81,19 @@ def send_everyone(contestId):
             else:
                 delta = '+' + str(delta)
             
+            results.append((handle, oldRating, newRating, delta))
+
+        results.sort(reverse = True, key = lambda x : int(x[3]))
+
+        message = '[{0}](https://codeforces.com/contest/{1}) был обновлен!\n\n'.format(name, contestId)
+        message += '`'
+
+        for handle, oldRating, newRating, delta in results:
             message += handle
             message += ': '
             message += ' ' * (maxLenNickname - len(handle))
             message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
-        
-        send_message(id, message + '`', mode = 'markdown', web_page_preview = True)
+
+        send_message(id, message + '`', mode = 'markdown', web_page_preview = False)
 
     connection.close()
