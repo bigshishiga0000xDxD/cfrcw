@@ -56,7 +56,7 @@ def send_everyone(contestId):
     for x in ids:
         id = x[0]
         handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-        message = '{0} был обновлен!\n\n'.format(name)
+        message = '{0}(https://codeforces.com/contest/{1}) был обновлен!\n\n'.format(name, contestId)
         message += '`'
 
         maxLenNickname = 0
