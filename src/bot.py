@@ -13,9 +13,9 @@ import cf
 
 Bot = telebot.TeleBot(token)
 
-def send_message(chatId, message, mode = None, markup = None):
+def send_message(chatId, message, mode = None, markup = None, web_page_preview = None):
     try:
-        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup)
+        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup, disable_web_page_preview = web_page_preview)
         return True
     except Exception as e:
         e = str(e)
@@ -86,6 +86,6 @@ def send_everyone(contestId):
             message += ' ' * (maxLenNickname - len(handle))
             message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
         
-        send_message(id, message + '`', mode = 'markdown')
+        send_message(id, message + '`', mode = 'markdown', web_page_preview = True)
 
     connection.close()
