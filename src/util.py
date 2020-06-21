@@ -82,12 +82,18 @@ def _list(id, connection):
         return 'Хэндлов нет'
     else:
         resp = 'Хэндлы:\n'
+        handles.sort(key = lambda x : x[0].lower())
 
+        cnt = 1
+        cntLen = len(str(len(handles)))
         for handle in handles:
+            resp += str(cnt)
+            resp += '. ' + ' ' * (cntLen - len(str(cnt)))
             resp += handle[0]
             resp += '\n'
+            cnt += 1
 
-        return resp
+        return '`' + resp + '`'
 
 def _get_ratings(id, connection):
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))

@@ -57,7 +57,7 @@ def remove_handles(message):
 def list_handles(message):
     id = message.chat.id
     with data.create_connection(dbname) as connection:
-        send_message(id, util._list(id, connection))
+        send_message(id, util._list(id, connection), mode = 'markdown')
     connection.close()
 
 @Bot.message_handler(commands = ['ratings'])

@@ -1,4 +1,5 @@
 import telebot
+from telebot import util
 from time import sleep
 
 from var import token
@@ -15,7 +16,9 @@ Bot = telebot.TeleBot(token)
 
 def send_message(chatId, message, mode = None, markup = None, web_page_preview = True):
     try:
-        Bot.send_message(chatId, message, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
+        splitted_text = util.split_string(message, 3000)
+        for text in splitted_text:
+            Bot.send_message(chatId, text, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
         return True
     except Exception as e:
         e = str(e)
@@ -45,17 +48,13 @@ def send_everyone(contestId):
     connection = data.create_connection(dbname)
 
     ids = data.execute_read_query(connection, ids_handler.select_all_ids())
-
-    while True:
-        contestants, name = cf.get_contestants(contestId)
-        if contestants == None:
-            sleep(interval)
-        else:
-            break
+    contestants, name = cf.get_contestants(contestId)
+    if contestants == None:
+        return
     
     for x in ids:
         id = x[0]
-        handles = data.execute_read_query(connection, ids_handler.select_handles(id))
+        handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
 
         maxLenNickname = 0
         for y in handles:

@@ -159,7 +159,7 @@ def create_connection(name):
         connection = psycopg2.connect(
             database = name,
             user = 'postgres',
-            password =  password,
+            password = password,
             host = '127.0.0.1',
             port = '5432'
         )

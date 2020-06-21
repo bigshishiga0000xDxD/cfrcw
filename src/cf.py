@@ -24,7 +24,7 @@ def check_changes():
 
     for i in range(toCheck):
         id = resp['result'][i]['id']
-        if resp['result'][i]['phase'] != 'FINISHED':
+        if resp['result'][i]['phase'] != 'FINISHED' or data.execute_read_query(connection, contests_handler.select_id(id)) != []:
             continue
 
         try:
@@ -35,7 +35,7 @@ def check_changes():
         
         logger.debug('i = {0}; id = {1};'.format(i, id))
 
-        if resp2['status'] == 'OK' and resp2['result'] != [] and data.execute_read_query(connection, contests_handler.select_id(id)) == []:
+        if resp2['status'] == 'OK' and resp2['result'] != []:
             res.append(id)
             data.execute_query(connection, contests_handler.insert_id(id))
 
