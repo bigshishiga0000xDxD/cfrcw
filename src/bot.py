@@ -1,5 +1,4 @@
 import telebot
-from telebot import util
 from time import sleep
 
 from var import token
@@ -8,16 +7,26 @@ from var import interval
 from logs import logger
 from data import ids_handler
 from util import _clear
+from util import split_string
 import data
 import cf
 
 
 Bot = telebot.TeleBot(token)
 
-def send_message(chatId, message, mode = None, markup = None, web_page_preview = True):
+def send_message(chatId, message, mode = None, markup = None, web_page_preview = True, all_monospace = False, header = None):
     try:
-        splitted_text = util.split_string(message, 3000)
+        if all_monospace:
+            mode = 'markdown'
+
+        splitted_text = split_string(message, 3000)
+
         for text in splitted_text:
+            if all_monospace:
+                text = '`' + text + '`'
+            if header != None:
+                text = header + text
+                header = None
             Bot.send_message(chatId, text, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
         return True
     except Exception as e:
@@ -84,8 +93,8 @@ def send_everyone(contestId):
 
         results.sort(reverse = True, key = lambda x : int(x[3]))
 
-        message = '[{0}](https://codeforces.com/contest/{1}) был обновлен!\n\n'.format(name, contestId)
-        message += '`'
+        header = '[{0}](https://codeforces.com/contest/{1}) был обновлен!\n\n'.format(name, contestId)
+        message = ''
 
         for handle, oldRating, newRating, delta in results:
             message += handle
@@ -93,6 +102,6 @@ def send_everyone(contestId):
             message += ' ' * (maxLenNickname - len(handle))
             message += '{0} -> {1} ({2})\n'.format(oldRating, newRating, delta)
 
-        send_message(id, message + '`', mode = 'markdown', web_page_preview = False)
+        send_message(id, message, header = header, mode = 'markdown', web_page_preview = False, all_monospace = True)
 
     connection.close()

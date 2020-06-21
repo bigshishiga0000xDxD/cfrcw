@@ -93,7 +93,7 @@ def _list(id, connection):
             resp += '\n'
             cnt += 1
 
-        return '`' + resp + '`'
+        return resp
 
 def _get_ratings(id, connection):
     handles = data.execute_read_query(connection, ids_handler.select_cf_handles(id))
@@ -126,4 +126,25 @@ def _get_ratings(id, connection):
             res += ' ' * (maxLenNickname - len(item[0][0]))
             res += str(item[1])
             res += '\n'
-        return '`' + res + '`'
+        return res
+
+def split_string(text, lenght):
+    result = list()
+    pos = list()
+    cur = ''
+
+    for i in range(len(text)):
+        if text[i] == '\n':
+            pos.append(i)
+    pos.append(len(text) - 1)
+
+    last = 0
+    for i in range(len(pos) - 1):
+        if pos[i + 1] - last + 1 > lenght or i == len(pos) - 2:
+            result.append(text[last:pos[i] + 1])
+            last = pos[i] + 1
+
+    if result == []:
+        result.append(text)
+    
+    return result

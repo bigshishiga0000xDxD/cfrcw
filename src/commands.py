@@ -57,14 +57,14 @@ def remove_handles(message):
 def list_handles(message):
     id = message.chat.id
     with data.create_connection(dbname) as connection:
-        send_message(id, util._list(id, connection), mode = 'markdown')
+        send_message(id, util._list(id, connection), all_monospace = True)
     connection.close()
 
 @Bot.message_handler(commands = ['ratings'])
 def get_ratings(message):
     id = message.chat.id
     with data.create_connection(dbname) as connection:
-        send_message(id, util._get_ratings(id, connection), mode = 'markdown')
+        send_message(id, util._get_ratings(id, connection), all_monospace = True)
 
 @Bot.message_handler(commands = ['sync'])
 def sync(message):
