@@ -3,14 +3,12 @@ from time import sleep
 
 from var import token
 from var import dbname
-from var import interval
 from logs import logger
 from data import ids_handler
 from util import _clear
 from util import split_string
 import data
 import cf
-
 
 Bot = telebot.TeleBot(token)
 
@@ -27,7 +25,19 @@ def send_message(chatId, message, mode = None, markup = None, web_page_preview =
             if header != None:
                 text = header + text
                 header = None
-            Bot.send_message(chatId, text, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
+            
+            success = False
+            while not success:
+                try:
+                    Bot.send_message(chatId, text, parse_mode = mode, reply_markup = markup, disable_web_page_preview = not web_page_preview)
+                    success = True
+                except Exception as e:
+                    se = str(e)
+                    if 'Too Many Requests' in se:
+                        time = int(se[se.find('retry_after') + len('retry_after') + 1:-4]) + 0.5
+                        sleep(time)
+                    else:
+                        raise e
         return True
     except Exception as e:
         e = str(e)

@@ -45,7 +45,7 @@ def _add_handles(id, args, connection):
             if status == 0:
                 return 'Пользователь с хэндлом {0} не найден'.format(resp)
             elif status == -1:
-                return 'Произошла ошибка codeforces'
+                return 'Произошла ошибка codeforces. Скорее всего было отправлено слишком много запросов или codeforces сейчас недоступен. Повторите позже'
             else:
                 handles += resp
             query = list()
@@ -108,7 +108,7 @@ def _get_ratings(id, connection):
             if i % groupSize == groupSize - 1 or i == len(handles) - 1:
                 _ratings = get_ratings(query)
                 if _ratings == None:
-                    return 'Произошла ошибка codeforces'
+                    return 'Произошла ошибка codeforces. Скорее всего было отправлено слишком много запросов или codeforces сейчас недоступен. Повторите позже'
 
                 for key, val in _ratings.items():
                     ratings[key] = val

@@ -3,6 +3,7 @@ import psycopg2
 from logs import logger
 from var import password
 from var import dbname
+from var import user
 
 
 class ids_handler:
@@ -158,7 +159,7 @@ def create_connection(name):
     try:
         connection = psycopg2.connect(
             database = name,
-            user = 'postgres',
+            user = user,
             password = password,
             host = '127.0.0.1',
             port = '5432'
