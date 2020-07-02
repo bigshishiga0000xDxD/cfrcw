@@ -5,30 +5,38 @@ from data import handles_handler
 from data import keys_handler
 from data import queue_handler
 from var import groupSize
+from var import limit
+from var import maximumExtraHandles
 from cf import check_users
 from cf import get_ratings
 import data
 
 def _remove_handles(id, args, connection):
-    args = list(map(lambda x : x.lower(), args))
+    data.execute_query(connection, ids_handler.remove_handles(id, list(map(lambda x : x.lower(), args))))
+    if len(args) > maximumExtraHandles:
+        data.execute_query(connection, data.delete_extra_handles())
 
-    for arg in args:
-        data.execute_query(connection, ids_handler.remove_handle(id, arg))
-        if data.execute_read_query(connection, ids_handler.select_all_handles(arg)) == []:
-            data.execute_query(connection, handles_handler.remove_handle(arg))
-    
     return 'Все хэндлы успешно удалены'
 
 def __add_handles(id, handles, handles_cf, connection):
+    added = data.execute_read_query(connection, ids_handler.select_handles(id))
+    size = len(set(list(map(lambda x : x[0], added)) + handles))
+
+    if size > limit:
+        return 'Общее количество хэндлов не может превышать {0}'.format(limit)
+
+    print('\n\n\n' + str(handles) + '\n\n\n')
+
     for i in range(len(handles)):
         handle = handles[i]
         cf_handle = handles_cf[i]
 
-        if data.execute_read_query(connection, ids_handler.select_handle(id, handle)) == []:
-            data.execute_query(connection, ids_handler.insert_handle(id, handle))
-        
-        if data.execute_read_query(connection, handles_handler.select_cf_handle(handle)) == []:
+        data.execute_query(connection, ids_handler.insert_handle(id, handle))
+        try:
             data.execute_query(connection, handles_handler.insert_handles(handle, cf_handle))
+        except Exception:
+            pass
+
     return 'Все хэндлы успешно добавлены'
 
 def _add_handles(id, args, connection):
@@ -62,9 +70,10 @@ def _cancel(id, connection):
     return 'Отменено'
 
 def _clear(id, connection):
-    handles = data.execute_read_query(connection, ids_handler.select_handles(id))
-    handles = map(lambda x : x[0], handles)
-    _remove_handles(id, handles, connection)
+    size = data.execute_read_query(connection, ids_handler.count_handles(id))[0][0]
+    data.execute_query(connection, ids_handler.remove_id(id))
+    if size > maximumExtraHandles:
+        data.execute_query(connection, data.delete_extra_handles())
     data.execute_query(connection, keys_handler.remove_keys(id))
     data.execute_query(connection, queue_handler.remove_id(id))
     return 'Все данные успешно удалены'

@@ -36,11 +36,29 @@ class ids_handler:
 
     @staticmethod
     def insert_handle(id, handle):
-        return "INSERT INTO ids VALUES ({0}, '{1}')".format(id, handle)    
+        return """
+        INSERT INTO ids
+            (id, handle)
+        SELECT {0}, '{1}'
+        WHERE NOT EXISTS (
+            SELECT id FROM ids WHERE id = {0} AND handle = '{1}'
+        )
+        """.format(id, handle)
 
     @staticmethod
-    def remove_handle(id, handle):
-        return "DELETE FROM ids WHERE id = {0} AND handle = '{1}'".format(id, handle)
+    def remove_handles(id, handles):
+        query = "DELETE FROM ids WHERE id = {0} AND handle IN (".format(id) 
+        
+        for i in range(len(handles)):
+            query += "'"
+            query += handles[i]
+            query += "'"
+            if (i != len(handles) - 1):
+                query += ", "
+        
+        query += ')'
+
+        return query
     
     @staticmethod
     def select_cf_handles(id):
@@ -53,10 +71,10 @@ class ids_handler:
             WHERE
                 ids.id = {0}
             """.format(id)
-    
+
     @staticmethod
-    def select_all_handles(handle):
-        return "SELECT 1 FROM ids WHERE handle = '{0}' LIMIT 1".format(handle)
+    def count_handles(id):
+        return "SELECT COUNT (*) FROM ids WHERE id = {0}".format(id)
 
 
 class keys_handler:
@@ -118,9 +136,10 @@ class handles_handler:
     """
     handle, cf_handle
     """
+
     @staticmethod
     def create_table():
-        return "CREATE TABLE IF NOT EXISTS handles ( handle TEXT, cf_handle TEXT )"
+        return "CREATE TABLE IF NOT EXISTS handles ( handle TEXT UNIQUE, cf_handle TEXT )"
     
     @staticmethod
     def select_all():
@@ -132,7 +151,7 @@ class handles_handler:
     
     @staticmethod
     def insert_handles(handle, cf_handle):
-        return "INSERT INTO handles VALUES ('{0}', '{1}')".format(handle, cf_handle)
+        return "INSERT INTO handles VALUES ('{0}', '{1}') ON CONFLICT (handle) DO NOTHING".format(handle, cf_handle)
     
     @staticmethod
     def remove_handle(handle):
@@ -154,6 +173,15 @@ class contests_handler:
     @staticmethod
     def insert_id(id):
         return "INSERT INTO contests VALUES ({0})".format(id)
+
+def delete_extra_handles():
+    return """
+        DELETE FROM handles
+        WHERE handle NOT IN (
+            SELECT handle
+            FROM ids
+        )
+    """
 
 def create_connection(name):
     try:
@@ -191,5 +219,6 @@ if __name__ == '__main__':
     execute_query(connection, queue_handler.create_table())
     execute_query(connection, handles_handler.create_table())
     execute_query(connection, contests_handler.create_table())
+    execute_query(connection, delete_extra_handles())
 
     connection.close()
