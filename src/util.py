@@ -25,17 +25,12 @@ def __add_handles(id, handles, handles_cf, connection):
     if size > limit:
         return 'Общее количество хэндлов не может превышать {0}'.format(limit)
 
-    print('\n\n\n' + str(handles) + '\n\n\n')
-
     for i in range(len(handles)):
         handle = handles[i]
         cf_handle = handles_cf[i]
 
         data.execute_query(connection, ids_handler.insert_handle(id, handle))
-        try:
-            data.execute_query(connection, handles_handler.insert_handles(handle, cf_handle))
-        except Exception:
-            pass
+        data.execute_query(connection, handles_handler.insert_handles(handle, cf_handle))
 
     return 'Все хэндлы успешно добавлены'
 
