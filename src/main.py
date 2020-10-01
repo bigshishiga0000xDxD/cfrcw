@@ -16,7 +16,6 @@ def watch_changes():
         for id in contests:
             send_everyone(id)
         sleep(interval)
-        
 
 # main
 

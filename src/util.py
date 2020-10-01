@@ -12,7 +12,14 @@ from cf import get_ratings
 import data
 
 def _remove_handles(id, args, connection):
-    data.execute_query(connection, ids_handler.remove_handles(id, list(map(lambda x : x.lower(), args))))
+    data.execute_query(
+        connection,
+        ids_handler.remove_handles(
+            id,
+            list(map(lambda x : x.lower(), args))
+        )
+    )
+
     if len(args) > maximumExtraHandles:
         data.execute_query(connection, data.delete_extra_handles())
 
@@ -52,11 +59,11 @@ def _add_handles(id, args, connection):
             else:
                 handles += resp
             query = list()
-    
+
     return __add_handles(id, args, handles, connection)
 
 def _add_keys(id, args, connection):
-    data.execute_query(connection, keys_handler.remove_keys(id)) 
+    data.execute_query(connection, keys_handler.remove_keys(id))
     data.execute_query(connection, keys_handler.insert_keys(id, args[0], args[1]))
     return 'Ключи добавлены'
 
@@ -67,12 +74,14 @@ def _cancel(id, connection):
 def _clear(id, connection):
     size = data.execute_read_query(connection, ids_handler.count_handles(id))[0][0]
     data.execute_query(connection, ids_handler.remove_id(id))
+
     if size > maximumExtraHandles:
         data.execute_query(connection, data.delete_extra_handles())
+
     data.execute_query(connection, keys_handler.remove_keys(id))
     data.execute_query(connection, queue_handler.remove_id(id))
     return 'Все данные успешно удалены'
-    
+
 
 def create_keyboard():
     button = types.InlineKeyboardButton('Отменить', callback_data = 'cancel')
@@ -111,12 +120,12 @@ def _get_ratings(id, connection):
             query.append(handles[i])
             if i % groupSize == groupSize - 1 or i == len(handles) - 1:
                 _ratings = get_ratings(query)
-                if _ratings == None:
+                if _ratings is None:
                     return 'Произошла ошибка codeforces. Скорее всего было отправлено слишком много запросов или codeforces сейчас недоступен. Повторите позже'
 
                 for key, val in _ratings.items():
                     ratings[key] = val
-                
+
                 query = list()
 
         ratings = {key: val for key, val in sorted(ratings.items(), key = lambda item: item[1], reverse = True)}
@@ -150,5 +159,5 @@ def split_string(text, lenght):
 
     if result == []:
         result.append(text)
-    
+
     return result

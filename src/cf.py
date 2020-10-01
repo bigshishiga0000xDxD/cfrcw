@@ -3,8 +3,7 @@ import json
 
 from logs import logger
 from auth import make_query
-from var import toCheck
-from var import dbname
+from var import dbname, maxTime
 from data import contests_handler
 import data
 
@@ -22,22 +21,29 @@ def check_changes():
     res = list()
     connection = data.create_connection(dbname)
 
-    for i in range(toCheck):
+    i = 0
+    while resp['result'][i]['relativeTimeSeconds'] < maxTime:
         id = resp['result'][i]['id']
-        if resp['result'][i]['phase'] != 'FINISHED' or data.execute_read_query(connection, contests_handler.select_id(id)) != []:
+
+        if resp['result'][i]['phase'] != 'FINISHED' or \
+                data.execute_read_query(connection, contests_handler.select_id(id)) != []:
+            i += 1
             continue
 
         try:
             resp2 = requests.get('https://codeforces.com/api/contest.ratingChanges?contestId={0}'.format(id)).json()
         except Exception as e:
             logger.critical(str(e))
+            i += 1
             continue
-        
+
         logger.debug('i = {0}; id = {1};'.format(i, id))
 
         if resp2['status'] == 'OK' and resp2['result'] != []:
             res.append(id)
             data.execute_query(connection, contests_handler.insert_id(id))
+        i += 1
+
 
     connection.close()
     logger.debug('found {0}'.format(res))
@@ -50,13 +56,13 @@ def check_users(handles):
     for handle in handles:
         url += handle
         url += ';'
-    
+
     try:
         resp = requests.get(url).json()
     except Exception as e:
         logger.critical(str(e))
         return (-1, None)
-    
+
     if resp['status'] == 'OK':
         handles = list()
         for x in resp['result']:
@@ -77,12 +83,13 @@ def get_contestants(id):
         return (None, None)
 
     if resp['status'] == 'FAILED':
-        logger.critical(resp['comment'])    
+        logger.critical(resp['comment'])
         return (None, None)
     else:
         res = dict()
         for i in range(len(resp['result'])):
-            res[resp['result'][i]['handle']] = (resp['result'][i]['oldRating'], resp['result'][i]['newRating'])
+            res[resp['result'][i]['handle']] = \
+                (resp['result'][i]['oldRating'], resp['result'][i]['newRating'])
         return (res, resp['result'][0]['contestName'])
 
 def get_ratings(handles):
@@ -108,12 +115,12 @@ def get_ratings(handles):
 
 def get_friends(open, secret):
     url = make_query({'onlyOnline': 'false'}, 'user.friends', open, secret)
-    
+
     try:
         resp = requests.get(url).json()
     except Exception:
         return (None, 'connection error')
-    
+
     if resp['status'] == 'FAILED':
         return (None, resp['comment'])
     else:

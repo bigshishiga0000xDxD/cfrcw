@@ -80,19 +80,23 @@ def sync(message):
         else:
             open, secret = elems[0]
             handles, status = cf.get_friends(open, secret)
-            
-            if handles == None:
+
+            if handles is None:
                 if 'Incorrect API key' in status:
                     send_message(id, 'Вы указали неправильные ключи')
                 else:
                     send_message(id, 'Что-то пошло не так. Скорее всего, codeforces сейчас недоступен.')
                     logger.critical(status)
             else:
-                send_message(id, util.__add_handles(id, list(map(lambda x : x.lower(), handles)), handles, connection))
-        
+                send_message(id, util.__add_handles(
+                    id,
+                    list(map(lambda x : x.lower(), handles)),
+                    handles,
+                    connection
+                ))
+
         connection.close()
-        
-        
+
 
 @Bot.message_handler(commands = ['addkeys'])
 def add_keys(message):
@@ -106,11 +110,15 @@ def add_keys(message):
         if len(args) == 2:
             send_message(id, util._add_keys(id, args, connection))
         elif len(args) == 0:
-            send_message(id, 'Введите ключи', markup = util.create_keyboard())
+            send_message(
+                id,
+                'Введите ключи (открытый и закрытый, через пробел)',
+                markup = util.create_keyboard()
+            )
             data.execute_query(connection, queue_handler.insert_id(id, 2))
         else:
             send_message(id, 'Неверные аргументы. Посмотрите /help')
-        
+
         connection.close()
 
 
@@ -136,8 +144,8 @@ def cancel_button_handler(call):
     try:
         if call.message and call.data == 'cancel':
             with data.create_connection(dbname) as connection:
-                edit_message(chatId, messageId, util._cancel(chatId, connection))    
-            
+                edit_message(chatId, messageId, util._cancel(chatId, connection))
+
     except Exception as e:
         logger.error(str(e))
 
@@ -145,7 +153,7 @@ def cancel_button_handler(call):
 def text_handler(message):
     id = message.chat.id
     connection = data.create_connection(dbname)
-    
+
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:
         return
@@ -157,7 +165,10 @@ def text_handler(message):
     elif resp[0][0] == 1:
         message = util._remove_handles(id, args, connection)
     else:
-        message = util._add_keys(id, args, connection)
+        if len(args) == 2:
+            message = util._add_keys(id, args, connection)
+        else:
+            message = 'Неверные аргументы. Посмотрите /help'
     send_message(id, message)
-    
+
     connection.close()

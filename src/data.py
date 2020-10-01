@@ -47,19 +47,19 @@ class ids_handler:
 
     @staticmethod
     def remove_handles(id, handles):
-        query = "DELETE FROM ids WHERE id = {0} AND handle IN (".format(id) 
-        
+        query = "DELETE FROM ids WHERE id = {0} AND handle IN (".format(id)
+
         for i in range(len(handles)):
             query += "'"
             query += handles[i]
             query += "'"
             if (i != len(handles) - 1):
                 query += ", "
-        
+
         query += ')'
 
         return query
-    
+
     @staticmethod
     def select_cf_handles(id):
         return """
@@ -84,7 +84,7 @@ class keys_handler:
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS keys ( id INTEGER, open TEXT, secret TEXT )"
-    
+
     @staticmethod
     def select_all():
         return "SELECT * FROM keys"
@@ -96,15 +96,15 @@ class keys_handler:
     @staticmethod
     def select_keys(id):
         return "SELECT open, secret FROM keys WHERE id = {0}".format(id)
-    
+
     @staticmethod
     def remove_keys(id):
         return "DELETE FROM keys WHERE id = {0}".format(id)
-    
+
     @staticmethod
     def drop_table():
         return "DROP TABLE keys"
-    
+
 
 class queue_handler:
     """
@@ -113,23 +113,22 @@ class queue_handler:
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS queue ( id INTEGER, type INTEGER )"
-    
+
     @staticmethod
     def select_type(id):
         return "SELECT type FROM queue WHERE id = {0}".format(id)
-    
+
     @staticmethod
     def insert_id(id, type):
         return "INSERT INTO queue VALUES ({0}, {1})".format(id, type)
-    
+
     @staticmethod
     def remove_id(id):
         return "DELETE FROM queue WHERE id = {0}".format(id)
-    
+
     @staticmethod
     def select_all():
         return "SELECT * FROM queue"
-    
 
 
 class handles_handler:
@@ -140,19 +139,19 @@ class handles_handler:
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS handles ( handle TEXT UNIQUE, cf_handle TEXT )"
-    
+
     @staticmethod
     def select_all():
         return "SELECT * FROM handles"
-    
+
     @staticmethod
     def select_cf_handle(handle):
         return "SELECT cf_handle FROM handles WHERE handle = '{0}'".format(handle)
-    
+
     @staticmethod
     def insert_handles(handle, cf_handle):
         return "INSERT INTO handles VALUES ('{0}', '{1}') ON CONFLICT (handle) DO NOTHING".format(handle, cf_handle)
-    
+
     @staticmethod
     def remove_handle(handle):
         return "DELETE FROM handles WHERE handle = '{0}'".format(handle)
@@ -165,14 +164,15 @@ class contests_handler:
     @staticmethod
     def create_table():
         return "CREATE TABLE IF NOT EXISTS contests ( id INTEGER )"
-    
+
     @staticmethod
     def select_id(id):
         return "SELECT (0) FROM contests WHERE id = {0}".format(id)
-    
+
     @staticmethod
     def insert_id(id):
         return "INSERT INTO contests VALUES ({0})".format(id)
+
 
 def delete_extra_handles():
     return """
