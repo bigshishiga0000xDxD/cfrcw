@@ -78,6 +78,7 @@ def send_everyone(contestId):
     ids = data.execute_read_query(connection, ids_handler.select_all_ids())
     contestants, name = cf.get_contestants(contestId)
     if contestants is None:
+        connection.close()
         return
 
     for x in ids:

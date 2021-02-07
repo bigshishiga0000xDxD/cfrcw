@@ -145,7 +145,6 @@ def cancel_button_handler(call):
         if call.message and call.data == 'cancel':
             with data.create_connection(dbname) as connection:
                 edit_message(chatId, messageId, util._cancel(chatId, connection))
-
     except Exception as e:
         logger.error(str(e))
 
@@ -156,6 +155,7 @@ def text_handler(message):
 
     resp = data.execute_read_query(connection, queue_handler.select_type(id))
     if resp == []:
+        connection.close()
         return
 
     data.execute_query(connection, queue_handler.remove_id(id))
