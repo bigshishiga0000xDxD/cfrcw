@@ -38,7 +38,7 @@ def make_query(args, methodName, open, secret):
         url += args[i][0]
         url += '='
         url += args[i][1]
-        if (i != len(args) - 1):
+        if i != len(args) - 1:
             url += '&'
 
     return url

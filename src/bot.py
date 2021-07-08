@@ -70,8 +70,6 @@ def edit_message(chatId, messageId, message):
             logger.error('Unknown error: {0}'.format(e))
             return False
 
-
-
 def send_everyone(contestId):
     connection = data.create_connection(dbname)
 
